@@ -1,0 +1,2867 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PassForge | Event QR Pass Generator</title>
+  <script>
+    window.tailwind = { config: { darkMode: 'class' } };
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #6C4CF1;
+      --primary-hover: #5A3DD4;
+      --primary-active: #4A2FB8;
+      --primary-subtle: #EDE9FD;
+      --primary-border: #C4B5FA;
+      --accent: #FFB5A7;
+      --accent-subtle: #FFF0ED;
+      --accent-border: #FFCFC7;
+      --bg: #F7F8FC;
+      --surface: #FFFFFF;
+      --surface-soft: #F7F8FC;
+      --sunken: #EDEEF4;
+      --text: #101828;
+      --text-secondary: #344054;
+      --muted: #667085;
+      --disabled: #98A2B3;
+      --border: #E4E7EC;
+      --border-strong: #D0D5DD;
+      --success: #027A48;
+      --success-bg: #ECFDF3;
+      --success-border: #ABEFC6;
+      --success-dot: #12B76A;
+      --warning: #B54708;
+      --warning-bg: #FFFAEB;
+      --warning-border: #FEDF89;
+      --warning-dot: #F79009;
+      --error: #B42318;
+      --error-bg: #FEF3F2;
+      --error-border: #FECDCA;
+      --error-dot: #F04438;
+      --info: #1D4ED8;
+      --info-bg: #EFF6FF;
+      --info-border: #BFDBFE;
+      --guest-bg-a: #F7F8FC;
+      --guest-bg-b: #F3F0FF;
+      --guest-bg-c: #ECFDF3;
+      --guest-card-shadow: rgba(16, 24, 40, .14);
+    }
+
+    .dark {
+      --primary-subtle: #211A3E;
+      --primary-border: #514689;
+      --accent-subtle: #2D1F2A;
+      --accent-border: #684352;
+      --success-bg: #082A1B;
+      --success-border: #155E3A;
+      --bg: #0B1020;
+      --surface: #111827;
+      --surface-soft: #151D2E;
+      --sunken: #172033;
+      --text: #F8FAFC;
+      --text-secondary: #D5DBE8;
+      --muted: #A7B0C3;
+      --border: #293244;
+      --border-strong: #3A455A;
+      --guest-bg-a: #0B1020;
+      --guest-bg-b: #14102B;
+      --guest-bg-c: #082A1B;
+      --guest-card-shadow: rgba(0, 0, 0, .42);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+      background: var(--bg);
+      color: var(--text);
+      transition: background 250ms ease, color 250ms ease;
+    }
+
+    button, input, select, textarea { font: inherit; }
+    button { cursor: pointer; }
+    button:disabled { cursor: not-allowed; opacity: .45; }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      animation: fade-up 280ms ease-out both;
+    }
+
+    .input {
+      width: 100%;
+      min-height: 40px;
+      border: 1px solid var(--border-strong);
+      border-radius: 8px;
+      padding: 8px 12px;
+      color: var(--text);
+      background: var(--surface);
+      outline: none;
+      transition: border-color 150ms ease, outline 150ms ease, background 250ms ease;
+    }
+
+    .input:focus {
+      border-color: var(--primary);
+      outline: 3px solid var(--primary-subtle);
+    }
+
+    input[type="date"],
+    input[type="time"] {
+      appearance: none;
+      -webkit-appearance: none;
+      color-scheme: light;
+    }
+
+    .dark input[type="date"],
+    .dark input[type="time"] {
+      color-scheme: dark;
+    }
+
+    input[type="date"]::-webkit-calendar-picker-indicator,
+    input[type="time"]::-webkit-calendar-picker-indicator {
+      display: none;
+      -webkit-appearance: none;
+    }
+
+    .dark input[type="date"]::-webkit-calendar-picker-indicator,
+    .dark input[type="time"]::-webkit-calendar-picker-indicator {
+      display: none;
+      -webkit-appearance: none;
+    }
+
+    .select-input {
+      appearance: none;
+      -webkit-appearance: none;
+      padding-right: 40px;
+      background-image: url("data:image/svg+xml,%3Csvg width='16' height='16' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='m6 9 6 6 6-6' stroke='%23667085' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      background-position: calc(100% - 12px) 50%;
+      background-size: 16px 16px;
+      background-repeat: no-repeat;
+    }
+
+    .select-input::-ms-expand { display: none; }
+
+    .btn {
+      min-height: 40px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      padding: 8px 14px;
+      font-size: 14px;
+      font-weight: 600;
+      transition: background 150ms ease, border-color 150ms ease, color 150ms ease;
+      white-space: nowrap;
+    }
+
+    .btn svg, .nav-button svg, .state-icon svg {
+      flex: 0 0 auto;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+    }
+
+    .btn-primary:hover { background: var(--primary-hover); border-color: var(--primary-hover); }
+    .btn-primary:active { background: var(--primary-active); border-color: var(--primary-active); }
+    .btn-secondary { background: var(--surface); color: var(--text-secondary); border-color: var(--border-strong); font-weight: 500; }
+    .btn-secondary:hover { background: var(--bg); border-color: var(--disabled); }
+    .btn-ghost { background: transparent; border-color: transparent; color: var(--muted); }
+    .btn-ghost:hover { background: var(--sunken); color: var(--text); }
+    .btn-danger { background: var(--error-bg); color: var(--error); border-color: var(--error-border); font-weight: 500; }
+    .dark .btn-danger { background: rgba(180, 35, 24, .15); color: #FDA29B; border-color: rgba(253, 162, 155, .28); }
+
+    .label {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .09em;
+      text-transform: uppercase;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 22px;
+      border: 1px solid;
+      border-radius: 999px;
+      padding: 2px 8px;
+      font-size: 11px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .badge-dot { width: 6px; height: 6px; border-radius: 999px; }
+    .badge-issued { color: var(--primary-active); background: var(--primary-subtle); border-color: var(--primary-border); }
+    .badge-used { color: var(--success); background: var(--success-bg); border-color: var(--success-border); }
+    .badge-revoked, .badge-expired, .badge-invalid { color: var(--error); background: var(--error-bg); border-color: var(--error-border); }
+    .badge-draft { color: var(--muted); background: var(--surface-soft); border-color: var(--border); }
+    .dark .badge-issued { color: #C4B5FA; background: rgba(108,76,241,.18); border-color: rgba(196,181,250,.32); }
+    .dark .badge-used { color: #86EFAC; background: rgba(2,122,72,.18); border-color: rgba(171,239,198,.25); }
+    .dark .badge-revoked, .dark .badge-expired, .dark .badge-invalid { color: #FDA29B; background: rgba(180,35,24,.18); border-color: rgba(254,205,202,.24); }
+    .dark .badge-draft { color: #A7B0C3; background: rgba(255,255,255,.04); border-color: var(--border); }
+
+    .table { width: 100%; border-collapse: collapse; }
+    .table th {
+      padding: 12px 16px;
+      color: var(--muted);
+      background: var(--surface-soft);
+      border-bottom: 1px solid var(--border);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .08em;
+      text-align: left;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .table td {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+      font-size: 14px;
+      vertical-align: middle;
+    }
+    .table tbody tr { transition: background 150ms ease; }
+    .table tbody tr:hover { background: var(--surface-soft); }
+    .table .input {
+      min-height: 34px;
+      border-color: transparent;
+      background: var(--surface-soft);
+    }
+    .table .input:focus {
+      background: var(--surface);
+      border-color: var(--primary);
+    }
+
+    .state-panel {
+      display: grid;
+      place-items: center;
+      gap: 12px;
+      min-height: 180px;
+      padding: 28px 20px;
+      text-align: center;
+    }
+
+    .state-icon {
+      display: grid;
+      place-items: center;
+      width: 44px;
+      height: 44px;
+      border-radius: 999px;
+      background: var(--sunken);
+      color: var(--primary);
+    }
+
+    .attendee-list {
+      display: grid;
+      grid-auto-rows: max-content;
+      align-content: start;
+      gap: 6px;
+      padding: 8px;
+    }
+
+    .attendee-item {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 10px;
+      background: var(--surface);
+      animation: fade-up 240ms ease-out both;
+      transition: border-color 150ms ease, background 150ms ease, transform 150ms ease;
+    }
+
+    .attendee-item h3 {
+      font-size: 14px;
+      line-height: 1.3;
+    }
+
+    .attendee-item p {
+      margin-top: 2px !important;
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .attendee-item p + p { margin-top: 5px !important; }
+
+    .attendee-item:hover {
+      background: var(--surface-soft);
+      border-color: var(--border-strong);
+      transform: translateY(-1px);
+    }
+
+    .attendee-item.active {
+      border-color: var(--primary-border);
+      background: var(--primary-subtle);
+    }
+
+    .dark .attendee-item.active {
+      border-color: rgba(196,181,250,.42);
+      background: rgba(108,76,241,.18);
+      color: var(--text);
+    }
+
+    .dark .attendee-item.active p,
+    .dark .attendee-item.active span {
+      color: var(--text-secondary) !important;
+    }
+
+    .dark .attendee-item.active h3 {
+      color: var(--text);
+    }
+
+    .soft-panel {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface-soft);
+      padding: 16px;
+    }
+
+    .selected-event-card {
+      display: grid;
+      gap: 16px;
+    }
+
+    .event-swatch {
+      width: 40px;
+      height: 40px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--primary);
+    }
+
+    .event-meta-row {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      color: var(--text);
+    }
+
+    .event-meta-row svg {
+      margin-top: 2px;
+      color: var(--muted);
+      flex: 0 0 auto;
+    }
+
+    .event-mini-stat {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      background: var(--surface-soft);
+    }
+
+    .input-shell {
+      position: relative;
+      width: 100%;
+    }
+
+    .input-shell svg {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      pointer-events: none;
+    }
+
+    .input-shell .input { padding-left: 36px; }
+    .textarea-shell svg {
+      top: 14px;
+      transform: none;
+    }
+
+    .pager {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      border-top: 1px solid var(--border);
+      padding: 14px 16px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .listing-card {
+      display: flex;
+      min-height: 0;
+      flex-direction: column;
+    }
+
+    .listing-header {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(220px, 320px);
+      gap: 16px;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      padding: 20px;
+    }
+
+    .listing-search {
+      width: 100%;
+      max-width: 320px;
+      justify-self: end;
+    }
+
+    .listing-body {
+      flex: 1;
+    }
+
+    .attendee-list.listing-body {
+      flex: 0 0 auto;
+    }
+
+    .state-panel.listing-body {
+      flex: 0 0 auto;
+    }
+
+    .search-error {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid var(--border);
+      padding: 10px 20px;
+      color: var(--warning);
+      background: var(--warning-bg);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .dark .search-error {
+      color: #FDB022;
+      background: rgba(181, 71, 8, .14);
+    }
+
+    .danger-link {
+      color: var(--error);
+    }
+
+    .upload-field {
+      display: grid;
+      gap: 12px;
+    }
+
+    .upload-dropzone {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 14px;
+      align-items: center;
+      border: 1px dashed var(--border-strong);
+      border-radius: 12px;
+      padding: 16px;
+      background: var(--surface-soft);
+      color: var(--text);
+      transition: border-color 150ms ease, background 150ms ease;
+    }
+
+    .upload-dropzone:hover {
+      border-color: var(--primary);
+      background: var(--primary-subtle);
+    }
+
+    .upload-dropzone.has-file {
+      border-style: solid;
+      border-color: var(--primary-border);
+      background: var(--primary-subtle);
+    }
+
+    .upload-icon {
+      display: grid;
+      width: 40px;
+      height: 40px;
+      place-items: center;
+      border-radius: 10px;
+      background: var(--surface);
+      color: var(--primary);
+      border: 1px solid var(--border);
+    }
+
+    .upload-preview {
+      width: 72px;
+      height: 44px;
+      border-radius: 8px;
+      object-fit: cover;
+      border: 1px solid var(--border);
+    }
+
+    .login-screen {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background: var(--bg);
+    }
+
+    .login-panel {
+      width: min(100%, 920px);
+      display: grid;
+      grid-template-columns: minmax(0, .95fr) minmax(360px, 1fr);
+    }
+
+    .public-verify-panel {
+      position: relative;
+      width: min(100%, 560px);
+      border: 0;
+      background: transparent;
+      color: var(--text);
+      padding: 28px;
+      box-shadow: 0 24px 70px var(--guest-card-shadow);
+      backdrop-filter: blur(18px);
+      animation: fade-up 280ms ease-out both;
+    }
+
+    .public-verify-panel::before {
+      content: "";
+      position: absolute;
+      inset: -50%;
+      z-index: 0;
+      background: conic-gradient(
+        from 0deg,
+        var(--primary),
+        var(--success-dot),
+        var(--accent),
+        var(--primary)
+      );
+      animation: guest-border-spin 5s linear infinite;
+    }
+
+    .public-verify-panel::after {
+      content: "";
+      position: absolute;
+      inset: 1px;
+      z-index: 1;
+      border-radius: 13px;
+      background: color-mix(in srgb, var(--surface) 97%, transparent);
+    }
+
+    .public-verify-screen {
+      position: relative;
+      overflow: hidden;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 16% 12%, color-mix(in srgb, var(--primary-subtle) 88%, transparent), transparent 34%),
+        radial-gradient(circle at 82% 78%, color-mix(in srgb, var(--success-bg) 82%, transparent), transparent 36%),
+        linear-gradient(135deg, var(--guest-bg-a), var(--guest-bg-b) 52%, var(--guest-bg-c));
+    }
+
+    .public-verify-screen::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      opacity: .48;
+      background-image:
+        linear-gradient(color-mix(in srgb, var(--border) 72%, transparent) 1px, transparent 1px),
+        linear-gradient(90deg, color-mix(in srgb, var(--border) 72%, transparent) 1px, transparent 1px);
+      background-size: 34px 34px;
+      mask-image: linear-gradient(to bottom, black, transparent 78%);
+      pointer-events: none;
+    }
+
+    .public-verify-screen::after {
+      content: "";
+      position: absolute;
+      inset: auto 0 0;
+      height: 34%;
+      background: repeating-linear-gradient(
+        135deg,
+        transparent 0 16px,
+        color-mix(in srgb, var(--border-strong) 34%, transparent) 16px 17px
+      );
+      opacity: .28;
+      pointer-events: none;
+    }
+
+    .public-verify-panel {
+      z-index: 1;
+    }
+
+    .public-verify-panel > * {
+      position: relative;
+      z-index: 2;
+    }
+
+    .public-verify-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+    }
+
+    .public-verify-mark {
+      display: grid;
+      width: 44px;
+      height: 44px;
+      flex: 0 0 auto;
+      place-items: center;
+      border-radius: 12px;
+      background: var(--primary);
+      color: #fff;
+      box-shadow: 0 12px 26px color-mix(in srgb, var(--primary) 28%, transparent);
+    }
+
+    .public-pass-code {
+      border: 1px solid color-mix(in srgb, var(--primary-border) 62%, var(--border));
+      border-radius: 10px;
+      background: color-mix(in srgb, var(--primary-subtle) 26%, var(--sunken));
+      padding: 12px;
+    }
+
+    .public-pass-code .btn {
+      min-width: 104px;
+    }
+
+    .public-verify-status {
+      min-height: 164px;
+    }
+
+    .public-loading-state {
+      display: grid;
+      min-height: 164px;
+      place-items: center;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface-soft);
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .public-loading-state .spinner {
+      width: 22px;
+      height: 22px;
+      margin: 0 auto 12px;
+      color: var(--primary);
+    }
+
+    .public-result {
+      display: grid;
+      gap: 10px;
+      min-height: 164px;
+      align-content: center;
+      border-radius: 14px;
+      color: var(--text);
+    }
+
+    .public-result.verify-success {
+      background: color-mix(in srgb, var(--success-bg) 58%, var(--surface));
+      border-color: color-mix(in srgb, var(--success-border) 76%, var(--border));
+    }
+
+    .public-result.verify-warning {
+      background: color-mix(in srgb, var(--warning-bg) 58%, var(--surface));
+      border-color: color-mix(in srgb, var(--warning-border) 76%, var(--border));
+    }
+
+    .public-result.verify-error {
+      background: color-mix(in srgb, var(--error-bg) 58%, var(--surface));
+      border-color: color-mix(in srgb, var(--error-border) 76%, var(--border));
+    }
+
+    .public-result-label {
+      width: fit-content;
+      border-radius: 999px;
+      padding: 5px 9px;
+      background: var(--surface);
+      color: var(--text-secondary);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .public-verify-screen {
+        --primary-subtle: #211A3E;
+        --primary-border: #514689;
+        --accent-subtle: #2D1F2A;
+        --accent-border: #684352;
+        --success-bg: #082A1B;
+        --success-border: #155E3A;
+        --bg: #0B1020;
+        --surface: #111827;
+        --surface-soft: #151D2E;
+        --sunken: #172033;
+        --text: #F8FAFC;
+        --text-secondary: #D5DBE8;
+        --muted: #A7B0C3;
+        --border: #293244;
+        --border-strong: #3A455A;
+        --guest-bg-a: #0B1020;
+        --guest-bg-b: #14102B;
+        --guest-bg-c: #082A1B;
+        --guest-card-shadow: rgba(0, 0, 0, .42);
+      }
+    }
+
+    @media (prefers-color-scheme: light) {
+      .public-verify-screen {
+        --primary-subtle: #EDE9FD;
+        --primary-border: #C4B5FA;
+        --accent-subtle: #FFF0ED;
+        --accent-border: #FFCFC7;
+        --success-bg: #ECFDF3;
+        --success-border: #ABEFC6;
+        --bg: #F7F8FC;
+        --surface: #FFFFFF;
+        --surface-soft: #F7F8FC;
+        --sunken: #EDEEF4;
+        --text: #101828;
+        --text-secondary: #344054;
+        --muted: #667085;
+        --border: #E4E7EC;
+        --border-strong: #D0D5DD;
+        --guest-bg-a: #F7F8FC;
+        --guest-bg-b: #F3F0FF;
+        --guest-bg-c: #ECFDF3;
+        --guest-card-shadow: rgba(16, 24, 40, .14);
+      }
+    }
+
+    .login-product {
+      display: flex;
+      min-height: 520px;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 32px;
+      border-right: 1px solid var(--border);
+      background: var(--sunken);
+      padding: 32px;
+    }
+
+    .login-form-panel {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 32px;
+    }
+
+    .login-feature {
+      display: flex;
+      gap: 12px;
+      border-top: 1px solid var(--border);
+      padding-top: 16px;
+    }
+
+    .login-feature-icon {
+      display: grid;
+      width: 36px;
+      height: 36px;
+      flex: 0 0 auto;
+      place-items: center;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--text-secondary);
+    }
+
+    .login-error {
+      border: 1px solid var(--error-border);
+      border-radius: 8px;
+      background: var(--error-bg);
+      color: var(--error);
+      padding: 10px 12px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .credential-hint {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      background: var(--surface-soft);
+      font-size: 13px;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 80;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      background: rgba(15, 23, 42, .48);
+    }
+
+    .toast {
+      background: var(--surface);
+      border-color: var(--border);
+      color: var(--text);
+    }
+
+    .toast-error {
+      background: var(--error-bg);
+      border-color: var(--error-border);
+      color: var(--error);
+    }
+
+    .toast-success {
+      background: var(--success-bg);
+      border-color: var(--success-border);
+      color: var(--success);
+    }
+
+    .verify-result {
+      border-radius: 16px;
+      padding: 24px;
+    }
+
+    .verify-error {
+      background: var(--error-bg);
+      border-color: var(--error-border);
+      color: var(--error);
+    }
+
+    .verify-warning {
+      background: var(--warning-bg);
+      border-color: var(--warning-border);
+      color: var(--warning);
+    }
+
+    .verify-success {
+      background: var(--success-bg);
+      border-color: var(--success-border);
+      color: var(--success);
+    }
+
+    .confirm-dialog {
+      width: min(100%, 420px);
+      padding: 22px;
+      animation: pass-in 220ms cubic-bezier(.16, 1, .3, 1) both;
+    }
+
+    .confirm-icon {
+      display: grid;
+      width: 40px;
+      height: 40px;
+      flex: 0 0 auto;
+      place-items: center;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--sunken);
+      color: var(--text-secondary);
+    }
+
+    .confirm-icon.danger-link {
+      border-color: var(--error-border);
+      background: var(--error-bg);
+      color: var(--error);
+    }
+
+    .top-actions {
+      display: grid;
+      grid-template-columns: minmax(180px, 240px) auto auto;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .top-actions.no-events {
+        grid-template-columns: auto auto;
+    }
+
+    .theme-button {
+      font-weight: 600;
+    }
+
+    .mobile-bottom-nav {
+      display: none;
+    }
+
+    .selected-attendee-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .selected-attendee-delete {
+      min-height: 34px;
+      padding: 7px 12px;
+      box-shadow: 0 8px 18px rgba(180, 35, 24, .12);
+    }
+
+    @media (max-width: 1023px) {
+      main > section {
+        padding-bottom: 104px !important;
+      }
+
+      .mobile-bottom-nav {
+        position: fixed;
+        right: 12px;
+        bottom: 12px;
+        left: 12px;
+        z-index: 60;
+        display: grid;
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: 4px;
+        padding: 8px;
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        background: color-mix(in srgb, var(--surface) 94%, transparent);
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(16px);
+      }
+
+      .mobile-tab {
+        display: grid;
+        min-width: 0;
+        min-height: 52px;
+        place-items: center;
+        align-content: center;
+        gap: 4px;
+        border-radius: 12px;
+        color: var(--muted);
+        font-size: 10px;
+        font-weight: 600;
+        line-height: 1;
+        transition: background 150ms ease, color 150ms ease, transform 150ms ease;
+      }
+
+      .mobile-tab svg {
+        width: 17px;
+        height: 17px;
+      }
+
+      .mobile-tab span:last-child {
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .mobile-tab.active {
+        background: var(--primary-subtle);
+        color: var(--primary-active);
+      }
+
+      .mobile-tab:active {
+        transform: translateY(1px);
+      }
+
+      .mobile-tab-avatar {
+        display: grid;
+        width: 20px;
+        height: 20px;
+        place-items: center;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        color: var(--text);
+        font-size: 9px;
+      }
+
+      .mobile-menu-panel {
+        position: absolute;
+        right: 0;
+        bottom: calc(100% + 10px);
+        width: min(280px, calc(100vw - 24px));
+        padding: 12px;
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        background: var(--surface);
+        box-shadow: var(--shadow);
+      }
+
+      .mobile-menu-profile {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 4px 4px 12px;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .mobile-menu-actions {
+        display: grid;
+        gap: 8px;
+        padding-top: 10px;
+      }
+    }
+
+    @media (max-width: 640px) {
+      body {
+        min-width: 0;
+      }
+
+      .login-screen {
+        padding: 12px;
+        align-items: start;
+      }
+
+      .login-product,
+      .login-form-panel,
+      .public-verify-panel {
+        padding: 20px;
+      }
+
+      .login-product {
+        gap: 24px;
+      }
+
+      .login-product h1 {
+        font-size: 24px;
+      }
+
+      .top-actions {
+        width: 100%;
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .top-actions .input {
+        grid-column: 1 / -1;
+        min-width: 0;
+      }
+
+      .top-actions.no-events {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .theme-button {
+        min-height: 38px;
+        padding: 8px 10px;
+        border-color: var(--border);
+        background: var(--surface);
+        font-size: 13px;
+        font-weight: 500;
+      }
+
+      .topbar .max-w-7xl {
+        align-items: stretch;
+      }
+
+      .topbar h1 {
+        font-size: 26px;
+        line-height: 1.15;
+      }
+    }
+
+    @media (max-width: 860px) {
+      .login-panel {
+        grid-template-columns: 1fr;
+      }
+
+      .login-product {
+        min-height: auto;
+        border-right: 0;
+        border-bottom: 1px solid var(--border);
+      }
+    }
+
+    @media (max-width: 640px) {
+      .upload-dropzone {
+        grid-template-columns: auto 1fr;
+      }
+
+      .upload-preview {
+        grid-column: 1 / -1;
+        width: 100%;
+        height: 96px;
+      }
+    }
+
+    @media (max-width: 767px) {
+      .card {
+        border-radius: 12px;
+      }
+
+      .listing-header {
+        grid-template-columns: 1fr;
+        padding: 16px;
+      }
+
+      .listing-search {
+        max-width: none;
+        justify-self: stretch;
+      }
+
+      .attendee-item {
+        grid-template-columns: 1fr;
+      }
+
+      .attendee-item > span {
+        width: fit-content;
+      }
+
+      .pager {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .pager .flex {
+        justify-content: space-between;
+      }
+
+      .metric-card {
+        min-height: 96px;
+      }
+
+      .pass-card {
+        width: 100%;
+      }
+
+      .pass-card header,
+      .pass-card .p-6 {
+        padding: 18px;
+      }
+
+      .pass-card .grid.grid-cols-\[132px_1fr\] {
+        grid-template-columns: 1fr;
+      }
+
+      .qrcode {
+        width: fit-content;
+      }
+
+      .table {
+        min-width: 640px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .btn {
+        width: 100%;
+      }
+
+      .top-actions .btn {
+        min-width: 0;
+      }
+
+      .selected-attendee-header {
+        align-items: stretch;
+        flex-direction: column;
+      }
+
+      .selected-attendee-delete {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .pager .flex,
+      .pager .btn {
+        width: 100%;
+      }
+
+      .event-mini-stat {
+        padding: 10px;
+      }
+
+      .selected-event-card .grid-cols-2 {
+        grid-template-columns: 1fr;
+      }
+
+      .modal-backdrop {
+        align-items: end;
+        padding: 12px;
+      }
+
+      .confirm-dialog {
+        width: 100%;
+      }
+    }
+
+    .metric-card {
+      display: flex;
+      min-height: 116px;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 20px;
+    }
+
+    .metric-icon {
+      display: grid;
+      width: 36px;
+      height: 36px;
+      place-items: center;
+      border-radius: 10px;
+      background: var(--primary-subtle);
+      color: var(--primary);
+    }
+
+    .sidebar {
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    .brand-mark {
+      display: grid;
+      width: 36px;
+      height: 36px;
+      place-items: center;
+      border-radius: 10px;
+      background: var(--primary);
+      color: #fff;
+      font-weight: 600;
+      letter-spacing: 0;
+    }
+
+    .sidebar-muted { color: var(--muted); }
+
+    .nav-button {
+      display: flex;
+      width: calc(100% - 24px);
+      align-items: center;
+      gap: 10px;
+      margin: 2px 12px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      color: var(--muted);
+      font-size: 14px;
+      transition: background 150ms ease, color 150ms ease;
+    }
+
+    .nav-button:hover {
+      background: var(--sunken);
+      color: var(--text);
+    }
+
+    .nav-button.active {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .topbar {
+      background: color-mix(in srgb, var(--surface) 92%, transparent);
+      border-color: var(--border);
+      backdrop-filter: blur(16px);
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid currentColor;
+      border-right-color: transparent;
+      border-radius: 999px;
+      animation: spin 700ms linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .pass-card {
+      width: min(100%, 400px);
+      background: #fff;
+      color: #101828;
+      /* border: 1px solid #E4E7EC; */
+      border-radius: 24px;
+      overflow: hidden;
+      animation: pass-in 360ms cubic-bezier(.16, 1, .3, 1) both;
+    }
+
+    .pass-card.compact { border-radius: 12px; }
+    .pass-card.ribbon { border-radius: 24px 24px 8px 8px; }
+    .pass-card.formal { border-radius: 4px; }
+
+    .pass-divider {
+      position: relative;
+      border-top: 1px dashed #D0D5DD;
+    }
+    .pass-divider::before,
+    .pass-divider::after {
+      content: "";
+      position: absolute;
+      top: -11px;
+      width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      background: var(--bg);
+      border: 1px solid #E4E7EC;
+    }
+    .pass-divider::before { left: -12px; }
+    .pass-divider::after { right: -12px; }
+
+    .qrcode canvas, .qrcode img { width: 116px !important; height: 116px !important; }
+
+    @keyframes fade-up {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes pass-in {
+      from { opacity: 0; transform: translateY(10px) scale(.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    @keyframes guest-border-spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .view-fade-enter-active,
+    .view-fade-leave-active {
+      transition: opacity 300ms ease-in-out, transform 300ms ease-in-out;
+    }
+
+    .view-fade-enter-from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+
+    .view-fade-leave-to {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+
+    @media (max-width: 767px) {
+      .mobile-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      .table { min-width: 640px; }
+      .metric-card { min-height: 96px; }
+      .pass-card { width: 100%; }
+      .pass-card header,
+      .pass-card .p-6 { padding: 18px; }
+      .pass-card .grid.grid-cols-\[132px_1fr\] { grid-template-columns: 1fr; }
+      .qrcode { width: fit-content; }
+    }
+
+    @media (max-width: 640px) {
+      main > section {
+        padding: 16px !important;
+      }
+
+      .event-editor-header {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .event-editor-header .btn {
+        width: 100%;
+      }
+
+      .topbar > div {
+        align-items: stretch;
+      }
+
+      .topbar nav .btn,
+      .table .btn {
+        width: auto;
+      }
+
+      .listing-header {
+        gap: 12px;
+      }
+
+      .pass-card header .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .btn { width: 100%; }
+      .topbar nav .btn,
+      .table .btn { width: auto; }
+      .top-actions .btn { width: 100%; min-width: 0; }
+      .pager .flex,
+      .pager .btn { width: 100%; }
+      .selected-event-card .grid-cols-2 { grid-template-columns: 1fr; }
+      .event-mini-stat { padding: 10px; }
+      .modal-backdrop { align-items: end; padding: 12px; }
+      .confirm-dialog { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+<div id="app" class="min-h-screen">
+  <section v-if="publicVerifyMode && !settings.authenticated" class="login-screen public-verify-screen">
+    <div class="card public-verify-panel">
+      <div class="public-verify-header">
+        <div class="public-verify-mark" v-html="icons.shield"></div>
+        <div>
+          <p class="label">PassForge</p>
+          <h1 class="text-2xl font-semibold">Pass verification</h1>
+          <p class="mt-2 text-sm leading-6" style="color: var(--muted);">Check the shared event pass status. No account is required.</p>
+        </div>
+      </div>
+
+      <div class="public-pass-code mt-6">
+        <p class="label">Shared pass code</p>
+        <div class="grid gap-3 sm:grid-cols-[1fr_auto]">
+          <input v-model="verificationInput" class="input" placeholder="Pass ID or QR payload">
+          <button @click="verifyPass" class="btn btn-primary" :disabled="loading.verify">
+            <span v-if="loading.verify" class="spinner"></span><span v-else v-html="icons.shield"></span>{{ loading.verify ? 'Checking...' : 'Check' }}
+          </button>
+        </div>
+      </div>
+
+      <div class="public-verify-status mt-5" aria-live="polite">
+        <div v-if="verificationError" class="login-error">
+          {{ verificationError }}
+        </div>
+        <div v-else-if="loading.verify" class="public-loading-state">
+          <div>
+            <span class="spinner"></span>
+            <p class="text-sm font-semibold" style="color: var(--text);">Checking pass</p>
+            <p class="mt-1 text-sm">Please wait while the shared pass is verified.</p>
+          </div>
+        </div>
+        <div v-else-if="verificationResult" class="verify-result public-result border" :class="verificationResult.boxClass">
+          <p class="public-result-label">{{ verificationResult.label }}</p>
+          <h2 class="mt-2 text-2xl font-semibold">{{ verificationResult.name }}</h2>
+          <p class="text-sm" style="color: var(--muted);">{{ verificationResult.detail }}</p>
+          <p v-if="verificationResult.timestamp" class="mt-3 text-xs font-mono">{{ verificationResult.timestamp }}</p>
+        </div>
+        <empty-state v-else :icon="icons.shield" title="Checking pass" message="The shared link will show whether this pass is valid, used, expired, revoked, or unavailable."></empty-state>
+      </div>
+
+      <button @click="verifyPass" class="btn btn-secondary mt-5 w-full" :disabled="loading.verify">
+        <span v-html="icons.refresh"></span>Check again
+      </button>
+    </div>
+  </section>
+
+  <section v-else-if="!settings.authenticated" class="login-screen">
+    <div class="card login-panel">
+      <section class="login-product">
+        <div>
+          <div class="flex items-center gap-3">
+            <div class="brand-mark">PF</div>
+            <div>
+              <p class="text-sm font-semibold">PassForge</p>
+              <p class="text-xs" style="color: var(--muted);">Event QR Pass Generator</p>
+            </div>
+          </div>
+          <div class="mt-10">
+            <p class="label">Organizer workspace</p>
+            <h1 class="text-3xl font-semibold leading-tight">Issue event passes with calm, clear controls.</h1>
+            <p class="mt-4 text-sm leading-6" style="color: var(--text-secondary);">Create events, manage attendees, export passes, and verify entry from one focused demo workspace.</p>
+          </div>
+        </div>
+        <div class="grid gap-4">
+          <div class="login-feature">
+            <span class="login-feature-icon" v-html="icons.calendar"></span>
+            <div>
+              <p class="text-sm font-semibold">Multi-event ready</p>
+              <p class="text-sm" style="color: var(--muted);">Keep each attendee list, pass design, and verifier flow organized by event.</p>
+            </div>
+          </div>
+          <div class="login-feature">
+            <span class="login-feature-icon" v-html="icons.qr"></span>
+            <div>
+              <p class="text-sm font-semibold">Exportable QR passes</p>
+              <p class="text-sm" style="color: var(--muted);">Generate branded passes with searchable records and clear status labels.</p>
+            </div>
+          </div>
+          <div class="login-feature">
+            <span class="login-feature-icon" v-html="icons.shield"></span>
+            <div>
+              <p class="text-sm font-semibold">Verification included</p>
+              <p class="text-sm" style="color: var(--muted);">Validate pass IDs and mark successful entry from the same interface.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="login-form-panel">
+        <div class="mb-6">
+          <p class="label">Demo access</p>
+          <h2 class="text-2xl font-semibold">Sign in to continue</h2>
+          <p class="mt-2 text-sm" style="color: var(--muted);">Use the hidden demo credentials below when testing this prototype.</p>
+        </div>
+
+        <form @submit.prevent="login" class="grid gap-5">
+          <div>
+            <label class="label">Email</label>
+            <div class="input-shell">
+              <span v-html="icons.mail"></span>
+              <input v-model="loginForm.email" type="email" class="input" placeholder="demo@passforge.app" autocomplete="email">
+            </div>
+          </div>
+          <div>
+            <label class="label">Password</label>
+            <div class="input-shell">
+              <span v-html="icons.lock"></span>
+              <input v-model="loginForm.password" type="password" class="input" placeholder="Enter password" autocomplete="current-password">
+            </div>
+          </div>
+          <div v-if="loginError" class="login-error">
+            {{ loginError }}
+          </div>
+          <button class="btn btn-primary w-full" type="submit" :disabled="loading.login">
+            <span v-if="loading.login" class="spinner"></span><span v-else v-html="icons.logIn"></span>{{ loading.login ? 'Signing in...' : 'Sign in' }}
+          </button>
+        </form>
+
+        <details class="credential-hint mt-5">
+          <summary class="cursor-pointer font-semibold">Demo login credentials</summary>
+          <div class="mt-3 grid gap-1 font-mono text-xs" style="color: var(--muted);">
+            <span>Email: demo@passforge.app</span>
+            <span>Password: passforge123</span>
+          </div>
+        </details>
+      </section>
+    </div>
+  </section>
+
+  <template v-else>
+  <aside class="sidebar hidden lg:flex fixed inset-y-0 left-0 w-60 flex-col">
+    <div class="px-5 py-5 border-b" style="border-color: var(--border);">
+      <div class="flex items-center gap-3">
+        <div class="brand-mark">PF</div>
+        <div>
+          <div class="font-semibold">PassForge</div>
+          <div class="sidebar-muted text-xs">Event passes</div>
+        </div>
+      </div>
+    </div>
+    <nav class="flex-1 py-5">
+      <p class="sidebar-muted px-6 pb-2 text-[10px] font-semibold uppercase tracking-[.14em]">Workspace</p>
+      <button v-for="item in navItems" :key="item.id" @click="view = item.id" class="nav-button" :class="view === item.id ? 'active' : ''">
+        <span v-html="item.icon"></span>{{ item.label }}
+      </button>
+    </nav>
+    <div class="border-t p-4" style="border-color: var(--border);">
+      <div class="flex items-center gap-3">
+        <div class="grid h-9 w-9 place-items-center rounded-full border text-sm font-semibold" style="border-color: var(--border); color: var(--text);">
+          {{ profileInitials }}
+        </div>
+        <div class="min-w-0 flex-1">
+          <p class="truncate text-sm font-semibold">{{ settings.profileName || 'Demo User' }}</p>
+          <p class="sidebar-muted truncate text-xs">{{ settings.profileEmail }}</p>
+        </div>
+      </div>
+      <button @click="logout" class="btn btn-ghost danger-link mt-3 w-full justify-start" :disabled="loading.logout">
+        <span v-if="loading.logout" class="spinner"></span><span v-else v-html="icons.logOut"></span>{{ loading.logout ? 'Signing out...' : 'Sign out' }}
+      </button>
+      <button @click="resetWorkspace" class="btn btn-ghost mt-2 w-full justify-start" :disabled="loading.resetWorkspace">
+        <span v-if="loading.resetWorkspace" class="spinner"></span><span v-else v-html="icons.refresh"></span>{{ loading.resetWorkspace ? 'Resetting...' : 'Reset workspace' }}
+      </button>
+    </div>
+  </aside>
+
+  <main class="lg:pl-60">
+    <header class="topbar sticky top-0 z-40 border-b">
+      <div class="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3.5 md:px-8">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-[.12em]" style="color: var(--muted);">Event QR Pass Generator</p>
+          <h1 class="text-2xl font-semibold md:text-3xl">{{ pageTitle }}</h1>
+        </div>
+        <div class="top-actions" :class="{'no-events': !events.length }">
+          <select v-if="events.length" v-model="selectedEventId" class="input select-input" aria-label="Select active event">
+            <option v-for="event in events" :key="event.id" :value="event.id">{{ event.name }}</option>
+          </select>
+          <button @click="newEvent" class="btn btn-primary" title="Create event" :disabled="loading.createEvent">
+            <span v-if="loading.createEvent" class="spinner"></span><span v-else v-html="icons.plus"></span>{{ loading.createEvent ? 'Creating...' : 'Event' }}
+          </button>
+          <button @click="cycleTheme" class="btn btn-secondary theme-button" :title="'Theme: ' + settings.theme">
+            <span v-html="themeIcon"></span>{{ themeLabel }}
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <nav class="mobile-bottom-nav lg:hidden" aria-label="Mobile navigation">
+      <button v-for="item in mobileNavItems" :key="item.id" @click="view = item.id; mobileMenuOpen = false" class="mobile-tab" :class="view === item.id ? 'active' : ''">
+        <span v-html="item.icon"></span>
+        <span>{{ item.label }}</span>
+      </button>
+      <button @click="mobileMenuOpen = !mobileMenuOpen" class="mobile-tab" :class="view === 'settings' || mobileMenuOpen ? 'active' : ''" aria-label="Open account menu">
+        <span class="mobile-tab-avatar">{{ profileInitials }}</span>
+        <span>More</span>
+      </button>
+      <div v-if="mobileMenuOpen" class="mobile-menu-panel">
+        <div class="mobile-menu-profile">
+          <div class="grid h-9 w-9 shrink-0 place-items-center rounded-full border text-sm font-semibold" style="border-color: var(--border); color: var(--text);">
+            {{ profileInitials }}
+          </div>
+          <div class="min-w-0">
+            <p class="truncate text-sm font-semibold">{{ settings.profileName || 'Demo User' }}</p>
+            <p class="truncate text-xs" style="color: var(--muted);">{{ settings.profileEmail }}</p>
+          </div>
+        </div>
+        <div class="mobile-menu-actions">
+          <button @click="view = 'settings'; mobileMenuOpen = false" class="btn btn-secondary w-full justify-start">
+            <span v-html="icons.user"></span>Profile
+          </button>
+          <button @click="resetWorkspace(); mobileMenuOpen = false" class="btn btn-secondary w-full justify-start" :disabled="loading.resetWorkspace">
+            <span v-if="loading.resetWorkspace" class="spinner"></span><span v-else v-html="icons.refresh"></span>{{ loading.resetWorkspace ? 'Resetting...' : 'Reset workspace' }}
+          </button>
+          <button @click="logout(); mobileMenuOpen = false" class="btn btn-danger w-full justify-start" :disabled="loading.logout">
+            <span v-if="loading.logout" class="spinner"></span><span v-else v-html="icons.logOut"></span>{{ loading.logout ? 'Signing out...' : 'Sign out' }}
+          </button>
+        </div>
+      </div>
+    </nav>
+
+    <section class="mx-auto max-w-7xl p-4 md:p-8">
+      <transition name="view-fade" mode="out-in">
+      <div :key="view">
+      <div v-if="view === 'dashboard'" class="space-y-6">
+        <div class="grid grid-cols-2 gap-4 xl:grid-cols-4">
+          <div v-for="metric in metrics" :key="metric.label" class="card metric-card">
+            <div class="flex items-start justify-between gap-3">
+              <p class="text-sm" style="color: var(--muted);">{{ metric.label }}</p>
+              <span class="metric-icon" v-html="metric.icon"></span>
+            </div>
+            <p class="text-3xl font-semibold">{{ metric.value }}</p>
+          </div>
+        </div>
+
+        <div class="grid gap-6 xl:grid-cols-[1fr_400px]">
+          <section class="card listing-card">
+            <div class="listing-header">
+              <div>
+                <h2 class="text-lg font-semibold">Events</h2>
+                <p class="text-sm" style="color: var(--muted);">Create, edit, and switch between event workspaces.</p>
+              </div>
+              <div class="input-shell listing-search">
+                <span v-html="icons.search"></span>
+                <input v-model="eventSearch" class="input" placeholder="Search events">
+              </div>
+            </div>
+            <div v-if="eventSearch && !filteredEvents.length" class="search-error">
+              <span v-html="icons.search"></span>No events match "{{ eventSearch }}".
+            </div>
+            <div v-if="filteredEvents.length" class="listing-body mobile-scroll">
+              <table class="table">
+                <thead><tr><th>Event</th><th>Window</th><th>Status</th><th>Attendees</th><th>Used</th><th></th></tr></thead>
+                <tbody>
+                  <tr v-for="event in paginatedEvents" :key="event.id" @click="selectEventAndView(event.id, 'event')" class="cursor-pointer">
+                    <td>
+                      <button @click="selectedEventId = event.id" class="text-left font-semibold">{{ event.name }}</button>
+                      <div class="text-xs" style="color: var(--muted);">{{ event.location }}</div>
+                    </td>
+                    <td>{{ formatEventWindow(event) }}</td>
+                    <td><status-badge :status="eventStatusLabel(event)" :status-class="statusClass"></status-badge></td>
+                    <td>{{ attendeesFor(event.id).length }}</td>
+                    <td>{{ attendeesFor(event.id).filter(a => a.status === 'Used').length }}</td>
+                    <td class="text-right">
+                      <button @click.stop="selectEventAndView(event.id, 'event')" class="btn btn-ghost"><span v-html="icons.arrowRight"></span>Open</button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <empty-state v-if="!events.length" class="listing-body" :icon="icons.calendar" title="No events yet" message="Create your first event to start generating passes." action-label="Create event" @action="newEvent"></empty-state>
+            <empty-state v-else-if="!filteredEvents.length" class="listing-body" :icon="icons.search" title="No matching events" message="Clear the search or try another event name, venue, or organizer."></empty-state>
+            <div v-if="filteredEvents.length" class="pager">
+              <span>{{ eventPageStart }}-{{ eventPageEnd }} of {{ filteredEvents.length }}</span>
+              <div class="flex gap-2">
+                <button @click="eventPage--" class="btn btn-ghost" :disabled="eventPage === 1"><span v-html="icons.chevronLeft"></span>Prev</button>
+                <button @click="eventPage++" class="btn btn-ghost" :disabled="eventPage === eventTotalPages">Next<span v-html="icons.chevronRight"></span></button>
+              </div>
+            </div>
+          </section>
+
+          <section class="card p-5">
+            <div v-if="selectedEvent" class="selected-event-card">
+              <div class="flex items-start justify-between gap-3">
+                <div class="min-w-0">
+                  <p class="label">Selected Event</p>
+                  <h2 class="truncate text-xl font-semibold">{{ selectedEvent.name }}</h2>
+                  <p class="mt-1 text-sm" style="color: var(--muted);">{{ selectedEvent.description || 'No description added.' }}</p>
+                </div>
+                <span class="event-swatch" :style="{ background: selectedEvent.color || '#6C4CF1' }"></span>
+              </div>
+
+              <div class="grid gap-3 text-sm">
+                <div class="event-meta-row">
+                  <span v-html="icons.user"></span>
+                  <div><span style="color: var(--muted);">Organizer</span><br><strong>{{ selectedEvent.organizer }}</strong></div>
+                </div>
+                <div class="event-meta-row">
+                  <span v-html="icons.calendar"></span>
+                  <div><span style="color: var(--muted);">Event window</span><br><strong>{{ formatEventWindow(selectedEvent) }}</strong></div>
+                </div>
+                <div class="event-meta-row">
+                  <span v-html="icons.mapPin"></span>
+                  <div><span style="color: var(--muted);">Venue</span><br><strong>{{ selectedEvent.location }}</strong></div>
+                </div>
+                <div class="event-meta-row">
+                  <span v-html="icons.shield"></span>
+                  <div><span style="color: var(--muted);">Event status</span><br><status-badge :status="eventStatusLabel(selectedEvent)" :status-class="statusClass"></status-badge></div>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 gap-3">
+                <div class="event-mini-stat">
+                  <p class="text-xs" style="color: var(--muted);">Attendees</p>
+                  <p class="mt-1 text-xl font-semibold">{{ selectedAttendees.length }}</p>
+                </div>
+                <div class="event-mini-stat">
+                  <p class="text-xs" style="color: var(--muted);">Used</p>
+                  <p class="mt-1 text-xl font-semibold">{{ selectedAttendees.filter(a => a.status === 'Used').length }}</p>
+                </div>
+              </div>
+
+              <div class="grid gap-2 sm:grid-cols-2">
+                <button @click="view = 'event'" class="btn btn-secondary"><span v-html="icons.settings"></span>Edit details</button>
+                <button @click="view = 'attendees'" class="btn btn-primary"><span v-html="icons.users"></span>Attendees</button>
+              </div>
+            </div>
+            <empty-state v-else :icon="icons.calendar" title="No event selected" message="Create an event or open one from the list to see its details."></empty-state>
+          </section>
+        </div>
+      </div>
+
+      <div v-if="view === 'event'" :class="selectedEvent ? 'grid gap-6 xl:grid-cols-[1fr_420px]' : ''">
+        <section class="card p-5 md:p-6">
+          <div class="event-editor-header mb-6 flex items-center justify-between gap-3">
+            <div>
+              <h2 class="text-lg font-semibold">Event Details & Branding</h2>
+              <p class="text-sm" style="color: var(--muted);">Changes save automatically and apply to generated passes.</p>
+            </div>
+            <button v-if="selectedEvent" @click="confirmDeleteEvent" class="btn btn-danger" :disabled="loading.deleteEvent"><span v-if="loading.deleteEvent" class="spinner"></span><span v-else v-html="icons.trash"></span>{{ loading.deleteEvent ? 'Deleting...' : 'Delete' }}</button>
+          </div>
+          <div v-if="selectedEvent" class="grid gap-5 md:grid-cols-2">
+            <div>
+              <label class="label">Event name</label>
+              <div class="input-shell">
+                <span v-html="icons.type"></span>
+                <input v-model="selectedEvent.name" class="input">
+              </div>
+            </div>
+            <div>
+              <label class="label">Organizer details</label>
+              <div class="input-shell">
+                <span v-html="icons.user"></span>
+                <input v-model="selectedEvent.organizer" class="input">
+              </div>
+            </div>
+            <div>
+              <label class="label">Start date</label>
+              <div class="input-shell">
+                <span v-html="icons.calendar"></span>
+                <input v-model="selectedEvent.date" type="date" class="input">
+              </div>
+            </div>
+            <div>
+              <label class="label">Start time</label>
+              <div class="input-shell">
+                <span v-html="icons.clock"></span>
+                <input v-model="selectedEvent.time" type="time" class="input">
+              </div>
+            </div>
+            <div>
+              <label class="label">End date</label>
+              <div class="input-shell">
+                <span v-html="icons.calendar"></span>
+                <input v-model="selectedEvent.endDate" type="date" class="input">
+              </div>
+            </div>
+            <div>
+              <label class="label">End time</label>
+              <div class="input-shell">
+                <span v-html="icons.clock"></span>
+                <input v-model="selectedEvent.endTime" type="time" class="input">
+              </div>
+            </div>
+            <div>
+              <label class="label">Event status</label>
+              <select v-model="selectedEvent.status" class="input select-input"><option>Active</option><option>Expired</option></select>
+            </div>
+            <div>
+              <label class="label">Current status</label>
+              <div class="soft-panel flex items-center justify-between gap-3 py-2">
+                <status-badge :status="eventStatusLabel(selectedEvent)" :status-class="statusClass"></status-badge>
+                <span class="text-xs" style="color: var(--muted);">{{ isEventExpired(selectedEvent) ? 'Passes will fail verification.' : 'Passes can be verified.' }}</span>
+              </div>
+            </div>
+            <div class="md:col-span-2">
+              <label class="label">Venue/location</label>
+              <div class="input-shell">
+                <span v-html="icons.mapPin"></span>
+                <input v-model="selectedEvent.location" class="input">
+              </div>
+            </div>
+            <div class="md:col-span-2">
+              <label class="label">Description</label>
+              <div class="input-shell textarea-shell">
+                <span v-html="icons.fileText"></span>
+                <textarea v-model="selectedEvent.description" rows="3" class="input"></textarea>
+              </div>
+            </div>
+            <div><label class="label">Brand color/theme</label><input v-model="selectedEvent.color" type="color" class="input h-12 p-1"></div>
+            <div><label class="label">Pass template</label><select v-model="selectedEvent.template" class="input select-input"><option>Classic</option><option>Ribbon</option><option>Compact</option><option>Formal</option></select></div>
+            <div class="md:col-span-2">
+              <label class="label">Optional cover/banner image</label>
+              <div class="upload-field">
+                <label class="upload-dropzone" :class="selectedEvent.banner ? 'has-file' : ''">
+                  <input @change="uploadBanner" type="file" accept="image/*" class="sr-only">
+                  <span class="upload-icon" v-html="icons.image"></span>
+                  <span>
+                    <span class="block text-sm font-semibold">{{ loading.uploadBanner ? 'Uploading banner...' : selectedEvent.banner ? 'Banner image added' : 'Upload a banner image' }}</span>
+                    <span class="mt-1 block text-xs" style="color: var(--muted);">{{ loading.uploadBanner ? 'Preparing preview and saving image.' : selectedEvent.banner ? 'Click to replace the current image.' : 'PNG, JPG, or WebP. Best around 1200 x 400.' }}</span>
+                  </span>
+                  <span v-if="loading.uploadBanner" class="spinner"></span>
+                  <img v-if="selectedEvent.banner" :src="selectedEvent.banner" alt="Banner preview" class="upload-preview">
+                </label>
+                <button v-if="selectedEvent.banner" @click="confirmRemoveBanner" class="btn btn-secondary w-fit"><span v-html="icons.trash"></span>Remove banner</button>
+              </div>
+            </div>
+          </div>
+          <empty-state v-else :icon="icons.calendar" title="No event selected" message="Create an event first, then add details, branding, and a cover image here." action-label="Create event" @action="newEvent"></empty-state>
+        </section>
+        <section v-if="selectedEvent" class="space-y-4">
+          <div class="card p-5">
+            <h2 class="text-lg font-semibold">Pass Design Preview</h2>
+            <p class="mt-1 text-sm" style="color: var(--muted);">This preview uses the selected attendee when one exists, otherwise it shows a placeholder pass.</p>
+          </div>
+          <pass-preview :event="selectedEvent" :attendee="selectedAttendee" :status-class="statusClass" :format-date-time="formatDateTime" :format-event-window="formatEventWindow"></pass-preview>
+        </section>
+      </div>
+
+      <div v-if="view === 'attendees'" class="grid gap-6 xl:grid-cols-[1fr_380px]">
+        <section class="card listing-card">
+          <div class="listing-header">
+            <div>
+              <h2 class="text-lg font-semibold">Attendees</h2>
+              <p class="text-sm" style="color: var(--muted);">{{ selectedAttendees.length }} people in this event</p>
+            </div>
+            <div class="input-shell listing-search">
+              <span v-html="icons.search"></span>
+              <input v-model="attendeeSearch" class="input" placeholder="Search by name or email">
+            </div>
+          </div>
+          <div v-if="attendeeSearch && !filteredAttendees.length" class="search-error">
+            <span v-html="icons.search"></span>No attendees match "{{ attendeeSearch }}".
+          </div>
+          <div v-if="filteredAttendees.length" class="attendee-list listing-body">
+            <button v-for="attendee in paginatedAttendees" :key="attendee.id" @click="selectedAttendeeId = attendee.id" class="attendee-item text-left" :class="selectedAttendeeId === attendee.id ? 'active' : ''">
+              <div class="min-w-0">
+                <div class="flex flex-wrap items-center gap-2">
+                  <h3 class="truncate font-semibold">{{ attendee.name }}</h3>
+                  <status-badge :status="attendee.status" :status-class="statusClass"></status-badge>
+                </div>
+                <p class="mt-1 truncate text-sm" style="color: var(--muted);">{{ attendee.email || 'No email added' }}</p>
+                <p class="mt-2 text-xs font-mono" style="color: var(--muted);">{{ attendee.passId }}</p>
+              </div>
+              <span class="rounded-full border px-3 py-1 text-xs font-semibold" style="border-color: var(--border); color: var(--muted);">{{ attendee.type }}</span>
+            </button>
+          </div>
+          <empty-state v-if="!selectedAttendees.length" class="listing-body" :icon="icons.users" title="No attendees yet" message="Add one attendee manually or paste a CSV list to generate passes." action-label="Add sample attendee" @action="addSampleAttendee"></empty-state>
+          <empty-state v-else-if="!filteredAttendees.length" class="listing-body" :icon="icons.search" title="No matching attendees" message="Clear the search or try another name, email, ticket type, or pass ID."></empty-state>
+          <div v-if="filteredAttendees.length" class="pager">
+            <span>{{ attendeePageStart }}-{{ attendeePageEnd }} of {{ filteredAttendees.length }}</span>
+            <div class="flex gap-2">
+              <button @click="attendeePage--" class="btn btn-ghost" :disabled="attendeePage === 1"><span v-html="icons.chevronLeft"></span>Prev</button>
+              <button @click="attendeePage++" class="btn btn-ghost" :disabled="attendeePage === attendeeTotalPages">Next<span v-html="icons.chevronRight"></span></button>
+            </div>
+          </div>
+        </section>
+
+        <aside class="space-y-4">
+          <section class="card p-5">
+            <h2 class="text-lg font-semibold">Add Person</h2>
+            <div class="mt-4 grid gap-3">
+              <div class="input-shell">
+                <span v-html="icons.user"></span>
+                <input v-model="newAttendee.name" class="input" placeholder="Full name">
+              </div>
+              <div class="input-shell">
+                <span v-html="icons.mail"></span>
+                <input v-model="newAttendee.email" type="email" class="input" placeholder="Email address">
+              </div>
+              <select v-model="newAttendee.type" class="input select-input"><option>General Admission</option><option>VIP Access</option><option>Speaker</option><option>Staff</option><option>Guest</option></select>
+              <button @click="addAttendee" class="btn btn-primary w-full" :disabled="loading.addAttendee">
+                <span v-if="loading.addAttendee" class="spinner"></span><span v-else v-html="icons.userPlus"></span>{{ loading.addAttendee ? 'Adding...' : 'Add attendee' }}
+              </button>
+            </div>
+          </section>
+
+          <section v-if="selectedAttendee" class="card p-5">
+            <div class="selected-attendee-header">
+              <div class="min-w-0">
+                <p class="label">Selected attendee</p>
+                <h2 class="truncate text-lg font-semibold">{{ selectedAttendee.name || 'Unnamed attendee' }}</h2>
+                <p class="mt-1 break-all text-xs font-mono" style="color: var(--muted);">{{ selectedAttendee.passId }}</p>
+              </div>
+              <button @click="confirmDeleteAttendee(selectedAttendee.id)" class="btn btn-danger selected-attendee-delete" :disabled="loading.deleteAttendee"><span v-if="loading.deleteAttendee" class="spinner"></span><span v-else v-html="icons.trash"></span>{{ loading.deleteAttendee ? 'Deleting...' : 'Delete attendee' }}</button>
+            </div>
+            <div class="mt-4 grid gap-3">
+              <div class="input-shell">
+                <span v-html="icons.user"></span>
+                <input v-model="selectedAttendee.name" class="input" placeholder="Full name">
+              </div>
+              <div class="input-shell">
+                <span v-html="icons.mail"></span>
+                <input v-model="selectedAttendee.email" type="email" class="input" placeholder="Email address">
+              </div>
+              <select v-model="selectedAttendee.type" class="input select-input"><option>General Admission</option><option>VIP Access</option><option>Speaker</option><option>Staff</option><option>Guest</option></select>
+              <select v-model="selectedAttendee.status" class="input select-input"><option>Issued</option><option>Used</option><option>Expired</option><option>Revoked</option></select>
+              <div>
+                <label class="label">Pass status actions</label>
+                <div class="grid gap-2 sm:grid-cols-3">
+                  <button @click="setAttendeeStatus(selectedAttendee, 'Used')" class="btn btn-secondary"><span v-html="icons.check"></span>Used</button>
+                  <button @click="setAttendeeStatus(selectedAttendee, 'Expired')" class="btn btn-secondary"><span v-html="icons.clock"></span>Expired</button>
+                  <button @click="setAttendeeStatus(selectedAttendee, 'Revoked')" class="btn btn-danger"><span v-html="icons.ban"></span>Revoke</button>
+                </div>
+              </div>
+              <div class="grid gap-2 sm:grid-cols-2">
+                <button @click="view = 'passes'" class="btn btn-secondary"><span v-html="icons.qr"></span>Open pass</button>
+                <button @click="verifyAttendee(selectedAttendee)" class="btn btn-primary"><span v-html="icons.shield"></span>Verify</button>
+              </div>
+            </div>
+          </section>
+
+          <section class="card p-5">
+            <details>
+              <summary class="cursor-pointer text-sm font-semibold"><span class="mr-2 inline-flex align-[-3px]" v-html="icons.upload"></span>Bulk import CSV</summary>
+              <div class="mt-4">
+                <p class="text-sm" style="color: var(--muted);">Paste rows as name,email,type.</p>
+                <textarea v-model="bulkCsv" rows="5" class="input mt-3" placeholder="Name,Email,Type&#10;Ava Cole,ava@example.com,VIP Access"></textarea>
+                <button @click="importCsv" class="btn btn-secondary mt-3 w-full" :disabled="loading.importCsv">
+                  <span v-if="loading.importCsv" class="spinner"></span><span v-else v-html="icons.upload"></span>{{ loading.importCsv ? 'Importing...' : 'Import attendees' }}
+                </button>
+              </div>
+            </details>
+          </section>
+        </aside>
+      </div>
+
+      <div v-if="view === 'passes'" :class="filteredPasses.length ? 'grid gap-6 xl:grid-cols-[1fr_420px]' : ''">
+        <section v-if="filteredPasses.length" class="order-2 space-y-4">
+          <pass-preview :event="selectedEvent" :attendee="selectedAttendee" :status-class="statusClass" :format-date-time="formatDateTime" :format-event-window="formatEventWindow"></pass-preview>
+          <div class="card p-4">
+            <div class="grid gap-3 sm:grid-cols-2">
+              <button @click="regeneratePass" class="btn btn-secondary" :disabled="loading.regeneratePass"><span v-if="loading.regeneratePass" class="spinner"></span><span v-else v-html="icons.refresh"></span>{{ loading.regeneratePass ? 'Regenerating...' : 'Regenerate' }}</button>
+              <button @click="copyShareLink" class="btn btn-secondary" :disabled="loading.copyShare"><span v-if="loading.copyShare" class="spinner"></span><span v-else v-html="icons.share"></span>{{ loading.copyShare ? 'Copying...' : 'Share Link' }}</button>
+              <button @click="downloadPNG" class="btn btn-primary" :disabled="loading.downloadPNG"><span v-if="loading.downloadPNG" class="spinner"></span><span v-else v-html="icons.download"></span>{{ loading.downloadPNG ? 'Exporting...' : 'Download PNG' }}</button>
+              <button @click="downloadPDF" class="btn btn-secondary" :disabled="loading.downloadPDF"><span v-if="loading.downloadPDF" class="spinner"></span><span v-else v-html="icons.file"></span>{{ loading.downloadPDF ? 'Building...' : 'Download PDF' }}</button>
+              <button @click="emailPass" class="btn btn-secondary" :disabled="loading.email"><span v-if="loading.email" class="spinner"></span><span v-else v-html="icons.mail"></span>{{ loading.email ? 'Opening email...' : 'Email Pass' }}</button>
+              <button @click="setAttendeeStatus(selectedAttendee, 'Used')" class="btn btn-secondary"><span v-html="icons.check"></span>Mark used</button>
+              <button @click="setAttendeeStatus(selectedAttendee, 'Expired')" class="btn btn-secondary"><span v-html="icons.clock"></span>Expire</button>
+              <button @click="setAttendeeStatus(selectedAttendee, 'Revoked')" class="btn btn-danger"><span v-html="icons.ban"></span>Revoke pass</button>
+            </div>
+          </div>
+        </section>
+        <section class="card listing-card order-1 xl:order-1">
+          <div class="listing-header">
+            <div>
+              <h2 class="text-lg font-semibold">Pass List</h2>
+              <p class="text-sm" style="color: var(--muted);">Select any attendee to preview, export, share, or regenerate their pass.</p>
+            </div>
+            <div class="input-shell listing-search">
+              <span v-html="icons.search"></span>
+              <input v-model="passSearch" class="input" placeholder="Search passes">
+            </div>
+          </div>
+          <div v-if="passSearch && !filteredPasses.length" class="search-error">
+            <span v-html="icons.search"></span>No passes match "{{ passSearch }}".
+          </div>
+          <div v-if="filteredPasses.length" class="listing-body mobile-scroll">
+            <table class="table">
+              <thead><tr><th>Attendee</th><th>Ticket</th><th>Status</th><th>Pass ID</th><th class="text-right">Actions</th></tr></thead>
+              <tbody>
+                <tr v-for="attendee in paginatedPasses" :key="attendee.id">
+                  <td>{{ attendee.name }}</td>
+                  <td>{{ attendee.type }}</td>
+                  <td><status-badge :status="attendee.status" :status-class="statusClass"></status-badge></td>
+                  <td class="font-mono text-xs">{{ attendee.passId }}</td>
+                  <td class="text-right">
+                    <div class="flex flex-wrap justify-end gap-2">
+                      <button @click="selectedAttendeeId = attendee.id" class="btn btn-secondary"><span v-html="icons.check"></span>Select</button>
+                      <button @click="verifyAttendee(attendee)" class="btn btn-primary"><span v-html="icons.shield"></span>Verify</button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <empty-state v-if="!selectedAttendees.length" class="listing-body" :icon="icons.qr" title="No passes generated" message="Add attendees to this event and PassForge will create unique QR passes automatically." action-label="Add sample attendee" @action="addSampleAttendee"></empty-state>
+          <empty-state v-else-if="!filteredPasses.length" class="listing-body" :icon="icons.search" title="No matching passes" message="Clear the search or try another attendee, status, ticket type, or pass ID."></empty-state>
+          <div v-if="filteredPasses.length" class="pager">
+            <span>{{ passPageStart }}-{{ passPageEnd }} of {{ filteredPasses.length }}</span>
+            <div class="flex gap-2">
+              <button @click="passPage--" class="btn btn-ghost" :disabled="passPage === 1"><span v-html="icons.chevronLeft"></span>Prev</button>
+              <button @click="passPage++" class="btn btn-ghost" :disabled="passPage === passTotalPages">Next<span v-html="icons.chevronRight"></span></button>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div v-if="view === 'verify'" :class="selectedEvent && selectedAttendees.length ? 'grid gap-6 xl:grid-cols-[1fr_420px]' : ''">
+        <section class="card p-5 md:p-6">
+          <h2 class="text-lg font-semibold">QR Verification</h2>
+          <p v-if="selectedEvent && selectedAttendees.length" class="mt-1 text-sm" style="color: var(--muted);">Paste a QR payload or pass ID to check whether a pass is valid, already used, expired, or revoked.</p>
+          <div v-if="selectedEvent && selectedAttendees.length" class="mt-5 grid gap-4 md:grid-cols-[1fr_auto]">
+            <input v-model="verificationInput" class="input" placeholder="PF|event:...|attendee:...|pass:... or pass ID">
+            <button @click="verifyPass" class="btn btn-primary" :disabled="loading.verify">
+              <span v-if="loading.verify" class="spinner"></span><span v-else v-html="icons.shield"></span>{{ loading.verify ? 'Checking...' : 'Verify' }}
+            </button>
+          </div>
+          <div v-if="selectedEvent && selectedAttendees.length && verificationError" class="login-error mt-4">
+            {{ verificationError }}
+          </div>
+          <div v-if="selectedEvent && selectedAttendees.length && verificationResult" class="verify-result mt-6 border" :class="verificationResult.boxClass">
+            <p class="text-xs font-semibold uppercase tracking-[.12em]">{{ verificationResult.label }}</p>
+            <h3 class="mt-2 text-2xl font-semibold">{{ verificationResult.name }}</h3>
+            <p class="mt-1 text-sm">{{ verificationResult.detail }}</p>
+            <p v-if="verificationResult.timestamp" class="mt-3 text-xs font-mono">{{ verificationResult.timestamp }}</p>
+            <div v-if="verificationResult.canAct" class="mt-4 flex flex-wrap gap-2">
+              <button v-if="verificationResult.canMarkUsed" @click="markVerifiedUsed" class="btn btn-primary" :disabled="loading.markUsed">
+                <span v-if="loading.markUsed" class="spinner"></span><span v-else v-html="icons.check"></span>{{ loading.markUsed ? 'Saving...' : 'Mark as used' }}
+              </button>
+              <button @click="setAttendeeStatus(selectedAttendee, 'Expired')" class="btn btn-secondary"><span v-html="icons.clock"></span>Expire</button>
+              <button @click="copyShareLink" class="btn btn-secondary" :disabled="loading.copyShare"><span v-if="loading.copyShare" class="spinner"></span><span v-else v-html="icons.share"></span>{{ loading.copyShare ? 'Copying...' : 'Copy link' }}</button>
+              <button @click="emailPass" class="btn btn-secondary" :disabled="loading.email"><span v-if="loading.email" class="spinner"></span><span v-else v-html="icons.mail"></span>{{ loading.email ? 'Opening...' : 'Email pass' }}</button>
+              <button @click="setAttendeeStatus(selectedAttendee, 'Revoked')" class="btn btn-danger"><span v-html="icons.ban"></span>Revoke</button>
+            </div>
+          </div>
+          <empty-state v-if="!selectedEvent" :icon="icons.calendar" title="No event selected" message="Create or select an event before verifying passes." action-label="Create event" @action="newEvent"></empty-state>
+          <empty-state v-else-if="!selectedAttendees.length" :icon="icons.qr" title="No passes to verify" message="Add attendees to this event first. Each attendee automatically gets a QR pass that can be verified here." action-label="Add sample attendee" @action="addSampleAttendee"></empty-state>
+          <empty-state v-else-if="!verificationResult && !verificationError && !loading.verify" :icon="icons.shield" title="Ready to verify" message="Paste a pass ID, scan a QR payload, or use the current pass helper on the right. Valid passes can be marked as used after verification."></empty-state>
+        </section>
+
+        <section v-if="selectedEvent && selectedAttendees.length" class="space-y-4">
+          <div class="card p-5">
+            <h2 class="text-lg font-semibold">Try Current Pass</h2>
+            <p class="mt-1 text-sm" style="color: var(--muted);">Use this to test the pass selected in the attendee/pass list.</p>
+            <p class="mt-3 break-all text-xs font-mono" style="color: var(--muted);">{{ qrPayload(selectedAttendee) }}</p>
+            <button @click="verificationInput = qrPayload(selectedAttendee); verifyPass()" class="btn btn-secondary mt-4 w-full" :disabled="!selectedAttendee || loading.verify"><span v-html="icons.shield"></span>Verify preview pass</button>
+          </div>
+          <pass-preview :event="selectedEvent" :attendee="selectedAttendee" :status-class="statusClass" :format-date-time="formatDateTime" :format-event-window="formatEventWindow"></pass-preview>
+        </section>
+      </div>
+
+      <div v-if="view === 'settings'" class="grid gap-6 xl:grid-cols-2">
+        <section class="card p-5 md:p-6">
+          <h2 class="text-lg font-semibold">Settings</h2>
+          <p class="mt-1 text-sm" style="color: var(--muted);">Theme preferences persist locally and apply across the app.</p>
+          <div class="mt-6 grid gap-3 sm:grid-cols-3">
+            <button v-for="mode in ['Light', 'Dark', 'System']" :key="mode" @click="settings.theme = mode" class="btn" :class="settings.theme === mode ? 'btn-primary' : 'btn-secondary'"><span v-html="mode === 'Dark' ? icons.moon : mode === 'Light' ? icons.sun : icons.settings"></span>{{ mode }}</button>
+          </div>
+        </section>
+        <section class="card p-5 md:p-6">
+          <h2 class="text-lg font-semibold">Prototype Auth</h2>
+          <p class="mt-1 text-sm" style="color: var(--muted);">Optional authentication is represented for multi-event management. This single-file MVP stores the profile locally.</p>
+          <div class="mt-5 grid gap-4">
+            <div><label class="label">Organizer profile</label><input v-model="settings.profileName" class="input"></div>
+            <div><label class="label">Login email</label><input v-model="settings.profileEmail" type="email" class="input"></div>
+            <div class="flex flex-wrap items-center justify-between gap-3 rounded-lg border p-4" style="border-color: var(--border); background: var(--sunken);">
+              <div>
+                <p class="text-sm font-semibold">{{ settings.authenticated ? 'Signed in' : 'Guest mode' }}</p>
+                <p class="text-xs" style="color: var(--muted);">{{ settings.authenticated ? 'Multi-event records are attached to this local profile.' : 'You can still generate one-off passes without signing in.' }}</p>
+              </div>
+              <button @click="logout" class="btn btn-danger" :disabled="loading.logout"><span v-if="loading.logout" class="spinner"></span><span v-else v-html="icons.logOut"></span>{{ loading.logout ? 'Signing out...' : 'Sign out' }}</button>
+            </div>
+          </div>
+        </section>
+      </div>
+      </div>
+      </transition>
+    </section>
+  </main>
+
+  <div v-if="toast.show" class="toast fixed bottom-5 left-1/2 z-50 -translate-x-1/2 rounded-lg border px-4 py-3 text-sm font-semibold" :class="toast.type === 'error' ? 'toast-error' : toast.type === 'success' ? 'toast-success' : ''">
+    {{ toast.message }}
+  </div>
+  <div v-if="confirmDialog.show" class="modal-backdrop">
+    <section class="card confirm-dialog">
+      <div class="flex items-start gap-3">
+        <span class="confirm-icon" :class="confirmDialog.iconClass" v-html="confirmDialog.icon"></span>
+        <div>
+          <h2 class="text-lg font-semibold">{{ confirmDialog.title }}</h2>
+          <p class="mt-1 text-sm" style="color: var(--muted);">{{ confirmDialog.message }}</p>
+        </div>
+      </div>
+      <div class="mt-6 flex justify-end gap-2">
+        <button @click="closeConfirm" class="btn btn-secondary">Cancel</button>
+        <button @click="runConfirm" class="btn" :class="confirmDialog.btnClass"><span v-html="confirmDialog.icon"></span>{{ confirmDialog.actionLabel }}</button>
+      </div>
+    </section>
+  </div>
+  </template>
+</div>
+
+<script type="text/x-template" id="empty-state-template">
+  <div class="state-panel">
+    <div class="state-icon" v-html="icon"></div>
+    <div>
+      <h3 class="text-lg font-semibold">{{ title }}</h3>
+      <p class="mx-auto mt-1 max-w-sm text-sm" style="color: var(--muted);">{{ message }}</p>
+    </div>
+    <button v-if="actionLabel" @click="$emit('action')" class="btn btn-secondary">{{ actionLabel }}</button>
+  </div>
+</script>
+
+<script type="text/x-template" id="status-badge-template">
+  <span class="badge" :class="statusClass(status)">
+    <span class="badge-dot" :style="{ background: dotColor }"></span>{{ status }}
+  </span>
+</script>
+
+<script type="text/x-template" id="pass-preview-template">
+  <article id="pass-card" class="pass-card mx-auto" :class="templateClass" aria-label="Digital event pass preview">
+    <div v-if="event?.banner" class="h-28 bg-cover bg-center" :style="{ backgroundImage: `url(${event.banner})` }"></div>
+    <header class="p-6" :style="{ background: event?.color || '#6C4CF1', color: headerTextColor }">
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-[.12em]" :style="{ color: headerMutedColor }">{{ event?.organizer || 'Organizer' }}</p>
+          <h3 class="mt-2 text-2xl font-bold leading-tight">{{ event?.name || 'Untitled Event' }}</h3>
+        </div>
+        <span class="rounded-full px-3 py-1 text-xs font-semibold" :style="{ background: headerBadgeBg }">{{ attendee?.type || 'Ticket' }}</span>
+      </div>
+      <div class="mt-6 grid grid-cols-2 gap-4 text-sm">
+        <div><p class="text-xs uppercase tracking-[.09em]" :style="{ color: headerMutedColor }">When</p><p class="font-semibold">{{ formatEventWindow ? formatEventWindow(event) : formatDateTime(event?.date, event?.time) }}</p></div>
+        <div><p class="text-xs uppercase tracking-[.09em]" :style="{ color: headerMutedColor }">Where</p><p class="font-semibold">{{ event?.location || 'Venue TBD' }}</p></div>
+      </div>
+    </header>
+    <div class="p-6">
+      <p class="text-xs font-semibold uppercase tracking-[.1em] text-slate-400">Pass holder</p>
+      <h4 class="mt-1 text-xl font-semibold">{{ attendee?.name || 'Select attendee' }}</h4>
+      <p class="mt-1 text-sm text-slate-500">{{ attendee?.email || 'No email added' }}</p>
+    </div>
+    <div class="pass-divider"></div>
+    <div class="grid grid-cols-[132px_1fr] gap-4 p-6">
+      <div class="qrcode rounded-xl border border-slate-200 bg-white p-2" ref="qrBox"></div>
+      <div class="flex flex-col justify-center gap-3">
+        <status-badge :status="attendee?.status || 'Draft'" :status-class="statusClass"></status-badge>
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-[.1em] text-slate-400">Pass ID</p>
+          <p class="break-all font-mono text-xs text-slate-700">{{ attendee?.passId || 'Not generated' }}</p>
+        </div>
+      </div>
+    </div>
+    <footer class="flex items-center justify-between px-6 py-4 text-xs font-semibold" :style="{ background: footerBg }">
+      <span>Scan to verify entry</span>
+      <span>PassForge</span>
+    </footer>
+  </article>
+</script>
+
+<script>
+  const { createApp, reactive, ref, computed, watch, onMounted, nextTick } = Vue;
+  const STORAGE_KEY = 'passforge-mvp-v2';
+
+  const icons = {
+    plus: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 5v14M5 12h14"/></svg>',
+    grid: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>',
+    calendar: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>',
+    users: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+    qr: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h2v2h-2zM18 14h2v6h-4v-2h2zM14 18h2v2h-2z"/></svg>',
+    shield: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/></svg>',
+    settings: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 15.5A3.5 3.5 0 1 0 12 8a3.5 3.5 0 0 0 0 7.5Z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 8a1.65 1.65 0 0 0-.33-1.82l-.06-.06A2 2 0 1 1 7.04 3.3l.06.06A1.65 1.65 0 0 0 8.92 3a1.65 1.65 0 0 0 1-1.51V1a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 8c.14.31.5.5.84.5H21a2 2 0 1 1 0 4h-.09c-.34 0-.7.2-.84.5Z"/></svg>',
+    download: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5M12 15V3"/></svg>',
+    file: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16c0 1.1.9 2 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>',
+    refresh: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16M3 12A9 9 0 0 1 18.5 5.8L21 8"/><path d="M3 21v-5h5M21 3v5h-5"/></svg>',
+    share: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>',
+    mail: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>',
+    lock: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>',
+    type: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 7V5h16v2M9 20h6M12 5v15"/></svg>',
+    mapPin: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>',
+    fileText: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16c0 1.1.9 2 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h6"/></svg>',
+    image: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10" r="1.5"/><path d="m21 15-5-5L5 19"/></svg>',
+    search: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>',
+    clock: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+    user: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="7" r="4"/><path d="M5.5 21a6.5 6.5 0 0 1 13 0"/></svg>',
+    trash: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/><path d="M10 11v5M14 11v5"/></svg>',
+    ban: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6 18.4 18.4"/></svg>',
+    userPlus: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M16 11h6"/></svg>',
+    upload: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8 12 3 7 8M12 3v12"/></svg>',
+    check: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m20 6-11 11-5-5"/></svg>',
+    arrowRight: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
+    chevronLeft: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m15 18-6-6 6-6"/></svg>',
+    chevronRight: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m9 18 6-6-6-6"/></svg>',
+    logIn: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5M15 12H3"/></svg>',
+    logOut: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>',
+    sun: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>',
+    moon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"/></svg>'
+  };
+
+  const makeId = (prefix) => `${prefix}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+  const seed = () => {
+    return {
+      settings: { theme: 'System', profileName: 'Alex Rivers', profileEmail: 'demo@passforge.app', authenticated: false },
+      selectedEventId: '',
+      selectedAttendeeId: '',
+      events: [],
+      attendees: []
+    };
+  };
+
+  const EmptyState = {
+    template: '#empty-state-template',
+    props: ['icon', 'title', 'message', 'actionLabel'],
+    emits: ['action']
+  };
+
+  const StatusBadge = {
+    template: '#status-badge-template',
+    props: ['status', 'statusClass'],
+    computed: {
+      dotColor() {
+        const colors = { Issued: '#6C4CF1', Used: '#12B76A', Active: '#12B76A', Expired: '#F04438', Revoked: '#F04438', Draft: '#98A2B3' };
+        return colors[this.status] || '#98A2B3';
+      }
+    }
+  };
+
+  const PassPreview = {
+    template: '#pass-preview-template',
+    props: ['event', 'attendee', 'statusClass', 'formatDateTime', 'formatEventWindow'],
+    components: { StatusBadge },
+    computed: {
+      templateClass() {
+        return (this.event?.template || 'Classic').toLowerCase();
+      },
+      footerBg() {
+        return this.event?.template === 'Formal' ? '#F7F8FC' : '#EDE9FD';
+      },
+      headerTextColor() {
+        const hex = (this.event?.color || '#6C4CF1').replace('#', '');
+        if (hex.length !== 6) return '#FFFFFF';
+        const r = parseInt(hex.slice(0, 2), 16);
+        const g = parseInt(hex.slice(2, 4), 16);
+        const b = parseInt(hex.slice(4, 6), 16);
+        return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.55 ? '#101828' : '#FFFFFF';
+      },
+      headerMutedColor() {
+        return this.headerTextColor === '#FFFFFF' ? 'rgba(255,255,255,0.72)' : 'rgba(16,24,40,0.55)';
+      },
+      headerBadgeBg() {
+        return this.headerTextColor === '#FFFFFF' ? 'rgba(255,255,255,0.18)' : 'rgba(16,24,40,0.1)';
+      },
+      payload() {
+        if (!this.attendee || !this.event) return 'PF|draft';
+        return `PF|event:${this.event.id}|attendee:${this.attendee.id}|pass:${this.attendee.passId}`;
+      }
+    },
+    watch: {
+      payload() { this.renderQr(); },
+      'attendee.name'() { this.renderQr(); },
+      'attendee.passId'() { this.renderQr(); }
+    },
+    mounted() { this.renderQr(); },
+    updated() { this.renderQr(); },
+    methods: {
+      renderQr() {
+        nextTick(() => {
+          if (!this.$refs.qrBox || !window.QRCode) return;
+          this.$refs.qrBox.innerHTML = '';
+          new QRCode(this.$refs.qrBox, {
+            text: this.payload,
+            width: 116,
+            height: 116,
+            colorDark: '#101828',
+            colorLight: '#FFFFFF',
+            correctLevel: QRCode.CorrectLevel.H
+          });
+        });
+      }
+    }
+  };
+
+  createApp({
+    components: { EmptyState, PassPreview, StatusBadge },
+    setup() {
+      const saved = (() => {
+        try { return JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch { return null; }
+      })();
+      const initial = saved || seed();
+      const verifyHash = location.hash.match(/verify=(.+)$/);
+      const events = reactive(initial.events);
+      const attendees = reactive(initial.attendees);
+      const settings = reactive(initial.settings);
+      const selectedEventId = ref(initial.selectedEventId || events[0]?.id);
+      const selectedAttendeeId = ref(initial.selectedAttendeeId || attendees.find(a => a.eventId === selectedEventId.value)?.id || '');
+      const view = ref('dashboard');
+      const mobileMenuOpen = ref(false);
+      const publicVerifyMode = ref(Boolean(verifyHash && !initial.settings.authenticated));
+      const eventSearch = ref('');
+      const attendeeSearch = ref('');
+      const passSearch = ref('');
+      const eventPage = ref(1);
+      const attendeePage = ref(1);
+      const passPage = ref(1);
+      const pageSize = 6;
+      const bulkCsv = ref('');
+      const verificationInput = ref('');
+      const verificationResult = ref(null);
+      const toast = reactive({ show: false, message: '', type: 'info' });
+      const loading = reactive({
+        login: false,
+        logout: false,
+        resetWorkspace: false,
+        createEvent: false,
+        deleteEvent: false,
+        deleteAttendee: false,
+        addAttendee: false,
+        importCsv: false,
+        uploadBanner: false,
+        copyShare: false,
+        regeneratePass: false,
+        downloadPNG: false,
+        downloadPDF: false,
+        email: false,
+        verify: false,
+        markUsed: false
+      });
+      const verificationError = ref('');
+      const loginError = ref('');
+      const loginForm = reactive({ email: '', password: '' });
+      const confirmDialog = reactive({ show: false, title: '', message: '', actionLabel: 'Delete', icon: '', iconClass: 'danger-link', btnClass: 'btn-danger', onConfirm: null });
+      const newAttendee = reactive({ name: '', email: '', type: 'General Admission' });
+
+      const navItems = [
+        { id: 'dashboard', label: 'Dashboard', icon: icons.grid },
+        { id: 'event', label: 'Event', icon: icons.calendar },
+        { id: 'attendees', label: 'Attendees', icon: icons.users },
+        { id: 'passes', label: 'Passes', icon: icons.qr },
+        { id: 'verify', label: 'Verify', icon: icons.shield },
+        { id: 'settings', label: 'Settings', icon: icons.settings }
+      ];
+      const mobileNavItems = navItems.filter(item => item.id !== 'settings');
+
+      const selectedEvent = computed(() => events.find(e => e.id === selectedEventId.value));
+      const selectedAttendees = computed(() => attendees.filter(a => a.eventId === selectedEventId.value));
+      const selectedAttendee = computed(() => {
+        const match = attendees.find(a => a.id === selectedAttendeeId.value && a.eventId === selectedEventId.value);
+        return match || selectedAttendees.value[0] || null;
+      });
+      const pageTitle = computed(() => navItems.find(i => i.id === view.value)?.label || 'Dashboard');
+      const filteredEvents = computed(() => events.filter(event => `${event.name} ${event.location} ${event.organizer}`.toLowerCase().includes(eventSearch.value.toLowerCase())));
+      const filteredAttendees = computed(() => selectedAttendees.value.filter(attendee => `${attendee.name} ${attendee.email} ${attendee.type} ${attendee.passId}`.toLowerCase().includes(attendeeSearch.value.toLowerCase())));
+      const filteredPasses = computed(() => selectedAttendees.value.filter(attendee => `${attendee.name} ${attendee.email} ${attendee.type} ${attendee.status} ${attendee.passId} ${shareUrl(attendee)}`.toLowerCase().includes(passSearch.value.toLowerCase())));
+      const eventTotalPages = computed(() => Math.max(1, Math.ceil(filteredEvents.value.length / pageSize)));
+      const attendeeTotalPages = computed(() => Math.max(1, Math.ceil(filteredAttendees.value.length / pageSize)));
+      const passTotalPages = computed(() => Math.max(1, Math.ceil(filteredPasses.value.length / pageSize)));
+      const paginatedEvents = computed(() => filteredEvents.value.slice((eventPage.value - 1) * pageSize, eventPage.value * pageSize));
+      const paginatedAttendees = computed(() => filteredAttendees.value.slice((attendeePage.value - 1) * pageSize, attendeePage.value * pageSize));
+      const paginatedPasses = computed(() => filteredPasses.value.slice((passPage.value - 1) * pageSize, passPage.value * pageSize));
+      const eventPageStart = computed(() => filteredEvents.value.length ? ((eventPage.value - 1) * pageSize) + 1 : 0);
+      const eventPageEnd = computed(() => Math.min(eventPage.value * pageSize, filteredEvents.value.length));
+      const attendeePageStart = computed(() => filteredAttendees.value.length ? ((attendeePage.value - 1) * pageSize) + 1 : 0);
+      const attendeePageEnd = computed(() => Math.min(attendeePage.value * pageSize, filteredAttendees.value.length));
+      const passPageStart = computed(() => filteredPasses.value.length ? ((passPage.value - 1) * pageSize) + 1 : 0);
+      const passPageEnd = computed(() => Math.min(passPage.value * pageSize, filteredPasses.value.length));
+      const metrics = computed(() => [
+        { label: 'Events', value: events.length, icon: icons.calendar },
+        { label: 'Attendees', value: attendees.length, icon: icons.users },
+        { label: 'Issued passes', value: attendees.filter(a => a.status === 'Issued').length, icon: icons.qr },
+        { label: 'Used passes', value: attendees.filter(a => a.status === 'Used').length, icon: icons.check }
+      ]);
+      const themeLabel = computed(() => settings.theme);
+      const themeIcon = computed(() => settings.theme === 'Dark' ? icons.moon : icons.sun);
+      const profileInitials = computed(() => {
+        const source = settings.profileName || settings.profileEmail || 'Demo User';
+        return source.split(/[\s@.]+/).filter(Boolean).slice(0, 2).map(part => part[0].toUpperCase()).join('') || 'DU';
+      });
+
+      const persist = () => {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({
+          settings,
+          selectedEventId: selectedEventId.value,
+          selectedAttendeeId: selectedAttendeeId.value,
+          events,
+          attendees
+        }));
+      };
+
+      const applyTheme = () => {
+        const isSystemDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const dark = settings.theme === 'Dark' || (settings.theme === 'System' && isSystemDark);
+        document.documentElement.classList.toggle('dark', dark);
+      };
+
+      const showToast = (message, type = 'info') => {
+        toast.message = message;
+        toast.type = type;
+        toast.show = true;
+        setTimeout(() => toast.show = false, 2600);
+      };
+
+      const delay = (ms = 420) => new Promise(resolve => setTimeout(resolve, ms));
+
+      const login = async () => {
+        const email = loginForm.email.trim().toLowerCase();
+        loading.login = true;
+        await delay(650);
+        if (email === 'demo@passforge.app' && loginForm.password === 'passforge123') {
+          settings.authenticated = true;
+          settings.profileEmail = email;
+          loginError.value = '';
+          loginForm.password = '';
+          loading.login = false;
+          showToast('Signed in successfully', 'success');
+          return;
+        }
+        loading.login = false;
+        loginError.value = 'Invalid demo credentials. Open the hidden hint below the form.';
+      };
+
+      const logout = async () => {
+        loading.logout = true;
+        await delay(420);
+        settings.authenticated = false;
+        loginForm.email = settings.profileEmail || 'demo@passforge.app';
+        loginForm.password = '';
+        loading.logout = false;
+        showToast('Signed out', 'info');
+      };
+
+      const askConfirm = ({ title, message, actionLabel = 'Delete', icon = icons.trash, iconClass = 'danger-link', btnClass = 'btn-danger', onConfirm }) => {
+        Object.assign(confirmDialog, { show: true, title, message, actionLabel, icon, iconClass, btnClass, onConfirm });
+      };
+
+      const closeConfirm = () => {
+        confirmDialog.show = false;
+        confirmDialog.onConfirm = null;
+      };
+
+      const runConfirm = async () => {
+        const action = confirmDialog.onConfirm;
+        closeConfirm();
+        if (typeof action === 'function') await action();
+      };
+
+      const resetWorkspace = async () => {
+        loading.resetWorkspace = true;
+        await delay(520);
+        events.splice(0, events.length);
+        attendees.splice(0, attendees.length);
+        selectedEventId.value = '';
+        selectedAttendeeId.value = '';
+        eventSearch.value = '';
+        attendeeSearch.value = '';
+        passSearch.value = '';
+        view.value = 'dashboard';
+        // settings.authenticated = false;
+        loading.resetWorkspace = false;
+        showToast('Workspace reset', 'success');
+      };
+
+      const statusClass = (status) => ({
+        Issued: 'badge-issued',
+        Used: 'badge-used',
+        Expired: 'badge-expired',
+        Revoked: 'badge-revoked',
+        Active: 'badge-used'
+      }[status] || 'badge-draft');
+
+      const formatDateTime = (date, time) => {
+        if (!date) return 'Date TBD';
+        const parsed = new Date(`${date}T${time || '00:00'}`);
+        return parsed.toLocaleString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+      };
+
+      const normalizeEventWindow = (event) => {
+        if (!event) return;
+        if (!event.endDate) event.endDate = event.date || new Date().toISOString().slice(0, 10);
+        if (!event.endTime) event.endTime = '23:59';
+        if (!event.status) event.status = 'Active';
+      };
+
+      const eventEndDate = (event) => {
+        if (!event) return null;
+        const endDate = event.endDate || event.date;
+        if (!endDate) return null;
+        return new Date(`${endDate}T${event.endTime || '23:59'}`);
+      };
+
+      const isEventExpired = (event) => {
+        if (!event) return false;
+        if ((event.status || 'Active') === 'Expired') return true;
+        const end = eventEndDate(event);
+        return Boolean(end && end < new Date());
+      };
+
+      const eventStatusLabel = (event) => isEventExpired(event) ? 'Expired' : 'Active';
+
+      const formatEventWindow = (event) => {
+        if (!event?.date) return 'Date TBD';
+        const start = formatDateTime(event.date, event.time);
+        const endDate = event.endDate || event.date;
+        const endTime = event.endTime || '23:59';
+        if (endDate === event.date && endTime === (event.time || '00:00')) return start;
+        return `${start} - ${formatDateTime(endDate, endTime)}`;
+      };
+
+      const attendeesFor = (eventId) => attendees.filter(a => a.eventId === eventId);
+
+      events.forEach(normalizeEventWindow);
+
+      const selectEventAndView = (eventId, targetView) => {
+        selectedEventId.value = eventId;
+        selectedAttendeeId.value = attendeesFor(eventId)[0]?.id || '';
+        view.value = targetView;
+      };
+
+      const newEvent = async () => {
+        loading.createEvent = true;
+        await delay(360);
+        const id = makeId('EVT');
+        events.push({
+          id,
+          name: 'Untitled Event',
+          date: new Date().toISOString().slice(0, 10),
+          time: '18:00',
+          endDate: new Date().toISOString().slice(0, 10),
+          endTime: '23:59',
+          status: 'Active',
+          location: 'Venue TBD',
+          organizer: settings.profileName || 'Organizer',
+          description: '',
+          color: '#6C4CF1',
+          template: 'Classic',
+          banner: ''
+        });
+        selectedEventId.value = id;
+        selectedAttendeeId.value = '';
+        view.value = 'event';
+        loading.createEvent = false;
+        showToast('Event created');
+      };
+
+      const confirmDeleteEvent = () => {
+        if (!selectedEvent.value) return;
+        askConfirm({
+          title: 'Delete event?',
+          message: `This will remove "${selectedEvent.value.name}" and all of its attendees and passes.`,
+          actionLabel: 'Delete event',
+          onConfirm: deleteEvent
+        });
+      };
+
+      const deleteEvent = async () => {
+        if (!selectedEvent.value) return;
+        loading.deleteEvent = true;
+        await delay(360);
+        const id = selectedEvent.value.id;
+        for (let i = attendees.length - 1; i >= 0; i--) if (attendees[i].eventId === id) attendees.splice(i, 1);
+        events.splice(events.findIndex(e => e.id === id), 1);
+        selectedEventId.value = events[0]?.id || '';
+        selectedAttendeeId.value = selectedEventId.value ? attendeesFor(selectedEventId.value)[0]?.id || '' : '';
+        if (!events.length) view.value = 'dashboard';
+        loading.deleteEvent = false;
+        showToast('Event deleted');
+      };
+
+      const addAttendee = () => {
+        if (!selectedEvent.value) return showToast('Create or select an event before adding attendees', 'error');
+        if (!newAttendee.name.trim()) return showToast('Add an attendee name first', 'error');
+        loading.addAttendee = true;
+        const attendee = {
+          id: makeId('ATT'),
+          eventId: selectedEvent.value.id,
+          name: newAttendee.name.trim(),
+          email: newAttendee.email.trim(),
+          type: newAttendee.type,
+          status: 'Issued',
+          passId: makeId('PASS'),
+          usedAt: ''
+        };
+        attendees.push(attendee);
+        selectedAttendeeId.value = attendee.id;
+        Object.assign(newAttendee, { name: '', email: '', type: 'General Admission' });
+        setTimeout(() => {
+          loading.addAttendee = false;
+          showToast('Attendee added', 'success');
+        }, 180);
+      };
+
+      const addSampleAttendee = () => {
+        if (!selectedEvent.value) return showToast('Create or select an event before adding a sample attendee', 'error');
+        Object.assign(newAttendee, { name: 'New Guest', email: 'guest@example.com', type: 'General Admission' });
+        addAttendee();
+      };
+
+      const confirmDeleteAttendee = (id) => {
+        const attendee = attendees.find(a => a.id === id);
+        askConfirm({
+          title: 'Delete attendee?',
+          message: `This will remove ${attendee?.name || 'this attendee'} and their generated pass.`,
+          actionLabel: 'Delete attendee',
+          onConfirm: () => deleteAttendee(id)
+        });
+      };
+
+      const deleteAttendee = async (id) => {
+        loading.deleteAttendee = true;
+        await delay(300);
+        const index = attendees.findIndex(a => a.id === id);
+        if (index >= 0) attendees.splice(index, 1);
+        selectedAttendeeId.value = selectedAttendees.value[0]?.id || '';
+        loading.deleteAttendee = false;
+        showToast('Attendee deleted', 'success');
+      };
+
+      const setAttendeeStatus = (attendee, status, notify = true) => {
+        if (!attendee) return showToast('Select an attendee first', 'error');
+        attendee.status = status;
+        attendee.usedAt = status === 'Used' ? new Date().toLocaleString() : '';
+        if (notify) showToast(`Pass marked as ${status.toLowerCase()}`, status === 'Revoked' || status === 'Expired' ? 'info' : 'success');
+      };
+
+      const confirmRemoveBanner = () => {
+        askConfirm({
+          title: 'Remove banner?',
+          message: 'This will remove the cover image from the selected event pass design.',
+          actionLabel: 'Remove banner',
+          onConfirm: () => {
+            selectedEvent.value.banner = '';
+            showToast('Banner removed', 'success');
+          }
+        });
+      };
+
+      const importCsv = () => {
+        if (!selectedEvent.value) return showToast('Create or select an event before importing attendees', 'error');
+        if (!bulkCsv.value.trim()) return showToast('Paste CSV rows before importing', 'error');
+        loading.importCsv = true;
+        const rows = bulkCsv.value.split(/\r?\n/).map(row => row.trim()).filter(Boolean);
+        let count = 0;
+        rows.forEach((row, index) => {
+          const [name, email = '', type = 'General Admission'] = row.split(',').map(cell => cell.trim());
+          if (!name || (index === 0 && name.toLowerCase() === 'name')) return;
+          attendees.push({ id: makeId('ATT'), eventId: selectedEventId.value, name, email, type, status: 'Issued', passId: makeId('PASS'), usedAt: '' });
+          count++;
+        });
+        bulkCsv.value = '';
+        selectedAttendeeId.value = selectedAttendees.value.at(-1)?.id || selectedAttendeeId.value;
+        setTimeout(() => {
+          loading.importCsv = false;
+          showToast(`${count} attendee${count === 1 ? '' : 's'} imported`, count ? 'success' : 'error');
+        }, publicVerifyMode.value ? 1800 : 320);
+      };
+
+      const uploadBanner = (event) => {
+        const file = event.target.files?.[0];
+        if (!file || !selectedEvent.value) return;
+        loading.uploadBanner = true;
+        const reader = new FileReader();
+        reader.onload = () => {
+          setTimeout(() => {
+            selectedEvent.value.banner = reader.result;
+            loading.uploadBanner = false;
+            showToast('Banner image added', 'success');
+          }, 420);
+        };
+        reader.readAsDataURL(file);
+      };
+
+      const qrPayload = (attendee) => {
+        if (!attendee || !selectedEvent.value) return '';
+        return `PF|event:${selectedEvent.value.id}|attendee:${attendee.id}|pass:${attendee.passId}`;
+      };
+
+      const shareUrl = (attendee) => `${location.origin}${location.pathname}#verify=${encodeURIComponent(qrPayload(attendee))}`;
+
+      const copyShareLink = async () => {
+        if (!selectedAttendee.value) return;
+        loading.copyShare = true;
+        await delay(300);
+        await navigator.clipboard.writeText(shareUrl(selectedAttendee.value));
+        loading.copyShare = false;
+        showToast('Pass verification link copied', 'success');
+      };
+
+      const emailPass = () => {
+        if (!selectedAttendee.value) return showToast('Select an attendee first', 'error');
+        loading.email = true;
+        const subject = encodeURIComponent(`${selectedEvent.value.name} pass for ${selectedAttendee.value.name}`);
+        const body = encodeURIComponent(`Hi ${selectedAttendee.value.name},\n\nHere is your event pass verification link:\n${shareUrl(selectedAttendee.value)}\n\nPass ID: ${selectedAttendee.value.passId}`);
+        showToast('Opening email composer', 'success');
+        setTimeout(() => loading.email = false, 600);
+        location.href = `mailto:${selectedAttendee.value.email || ''}?subject=${subject}&body=${body}`;
+      };
+
+      const regeneratePass = () => {
+        if (!selectedAttendee.value) return;
+        askConfirm({
+          title: 'Regenerate pass?',
+          message: `This will create a new QR code for ${selectedAttendee.value.name}. The current pass ID will be invalidated and any shared links will stop working.`,
+          actionLabel: 'Regenerate',
+          icon: icons.refresh,
+          iconClass: '',
+          btnClass: 'btn-secondary',
+          onConfirm: async () => {
+            loading.regeneratePass = true;
+            await delay(360);
+            selectedAttendee.value.passId = makeId('PASS');
+            selectedAttendee.value.status = 'Issued';
+            selectedAttendee.value.usedAt = '';
+            loading.regeneratePass = false;
+            showToast('Pass regenerated', 'success');
+          }
+        });
+      };
+
+      const capturePass = async () => {
+        await nextTick();
+        const element = document.getElementById('pass-card');
+        return html2canvas(element, { backgroundColor: '#FFFFFF', scale: 3, useCORS: true });
+      };
+
+      const safeFileName = () => `${selectedEvent.value?.name || 'Event'}-${selectedAttendee.value?.name || 'Pass'}`.replace(/[^a-z0-9]+/gi, '-');
+
+      const downloadPNG = async () => {
+        if (!selectedAttendee.value) return showToast('Select an attendee first', 'error');
+        loading.downloadPNG = true;
+        try {
+          const canvas = await capturePass();
+          const link = document.createElement('a');
+          link.download = `${safeFileName()}.png`;
+          link.href = canvas.toDataURL('image/png');
+          link.click();
+          showToast('PNG downloaded', 'success');
+        } catch (error) {
+          showToast('PNG export failed. Try again after the preview finishes rendering.', 'error');
+        } finally {
+          loading.downloadPNG = false;
+        }
+      };
+
+      const downloadPDF = async () => {
+        if (!selectedAttendee.value) return showToast('Select an attendee first', 'error');
+        loading.downloadPDF = true;
+        try {
+          const canvas = await capturePass();
+          const img = canvas.toDataURL('image/png');
+          const pdf = new jspdf.jsPDF({ orientation: 'portrait', unit: 'px', format: [canvas.width, canvas.height] });
+          pdf.addImage(img, 'PNG', 0, 0, canvas.width, canvas.height);
+          pdf.save(`${safeFileName()}.pdf`);
+          showToast('PDF downloaded', 'success');
+        } catch (error) {
+          showToast('PDF export failed. Try again after the preview finishes rendering.', 'error');
+        } finally {
+          loading.downloadPDF = false;
+        }
+      };
+
+      const parsePassId = (value) => {
+        const raw = decodeURIComponent(value || '').trim();
+        const payloadMatch = raw.match(/pass:([^|]+)/);
+        return payloadMatch ? payloadMatch[1] : raw.replace(/^#/, '');
+      };
+
+      const verifyPass = () => {
+        verificationError.value = '';
+        verificationResult.value = null;
+        const passId = parsePassId(verificationInput.value);
+        if (!passId) {
+          verificationError.value = 'Enter a QR payload or pass ID before verifying.';
+          showToast('Verification needs a pass ID', 'error');
+          return;
+        }
+        loading.verify = true;
+        setTimeout(() => {
+        const attendee = attendees.find(a => a.passId === passId);
+        if (!attendee) {
+          verificationResult.value = {
+            label: 'Unavailable',
+            name: 'Pass data not found',
+            detail: publicVerifyMode.value ? 'This shared link was received, but this browser does not have the organizer demo workspace data needed to validate it.' : 'No attendee record matches this QR payload or pass ID.',
+            boxClass: 'verify-error'
+          };
+          loading.verify = false;
+          return;
+        }
+        const event = events.find(e => e.id === attendee.eventId);
+        normalizeEventWindow(event);
+        selectedEventId.value = attendee.eventId;
+        selectedAttendeeId.value = attendee.id;
+        if (attendee.status === 'Revoked' || attendee.status === 'Expired') {
+          verificationResult.value = { label: attendee.status === 'Revoked' ? 'Invalid' : 'Expired', name: attendee.name, detail: `${event?.name || 'Event'} · ${attendee.type}`, boxClass: 'verify-error' };
+        } else if (attendee.status === 'Used') {
+          verificationResult.value = { label: 'Already Used', name: attendee.name, detail: `${event?.name || 'Event'} · ${attendee.type}`, timestamp: attendee.usedAt ? `Used at ${attendee.usedAt}` : '', boxClass: 'verify-warning' };
+        } else if (isEventExpired(event)) {
+          verificationResult.value = { label: 'Event Expired', name: attendee.name, detail: `${event?.name || 'Event'} · ${formatEventWindow(event)}`, boxClass: 'verify-error' };
+        } else {
+          verificationResult.value = { label: 'Valid', name: attendee.name, detail: `${event?.name || 'Event'} · ${attendee.type}`, canMarkUsed: true, canAct: true, boxClass: 'verify-success' };
+        }
+        loading.verify = false;
+        showToast(`Verification result: ${verificationResult.value.label}`, verificationResult.value.label === 'Valid' ? 'success' : 'info');
+        }, 2000);
+      };
+
+      const verifyAttendee = (attendee) => {
+        if (!attendee) return showToast('Select an attendee first', 'error');
+        selectedEventId.value = attendee.eventId;
+        selectedAttendeeId.value = attendee.id;
+        verificationInput.value = `PF|event:${attendee.eventId}|attendee:${attendee.id}|pass:${attendee.passId}`;
+        verificationResult.value = null;
+        verificationError.value = '';
+        view.value = 'verify';
+        nextTick(verifyPass);
+      };
+
+      const markVerifiedUsed = () => {
+        if (!selectedAttendee.value) return;
+        loading.markUsed = true;
+        setAttendeeStatus(selectedAttendee.value, 'Used', false);
+        verificationInput.value = qrPayload(selectedAttendee.value);
+        setTimeout(() => {
+          loading.markUsed = false;
+          verifyPass();
+          showToast('Pass marked as used', 'success');
+        }, 180);
+      };
+
+      const cycleTheme = () => {
+        settings.theme = settings.theme === 'System' ? 'Light' : settings.theme === 'Light' ? 'Dark' : 'System';
+      };
+
+      watch([events, attendees, settings, selectedEventId, selectedAttendeeId], persist, { deep: true });
+      watch(() => settings.theme, applyTheme);
+      watch(eventSearch, () => eventPage.value = 1);
+      watch(attendeeSearch, () => attendeePage.value = 1);
+      watch(passSearch, () => passPage.value = 1);
+      watch(selectedEventId, () => {
+        if (!selectedAttendees.value.some(a => a.id === selectedAttendeeId.value)) selectedAttendeeId.value = selectedAttendees.value[0]?.id || '';
+        attendeePage.value = 1;
+        passPage.value = 1;
+      });
+      watch(eventTotalPages, () => {
+        if (eventPage.value > eventTotalPages.value) eventPage.value = eventTotalPages.value;
+      });
+      watch(attendeeTotalPages, () => {
+        if (attendeePage.value > attendeeTotalPages.value) attendeePage.value = attendeeTotalPages.value;
+      });
+      watch(passTotalPages, () => {
+        if (passPage.value > passTotalPages.value) passPage.value = passTotalPages.value;
+      });
+
+      onMounted(() => {
+        applyTheme();
+        if (!selectedAttendeeId.value && selectedAttendees.value[0]) selectedAttendeeId.value = selectedAttendees.value[0].id;
+        if (verifyHash) {
+          verificationInput.value = decodeURIComponent(verifyHash[1]);
+          view.value = 'verify';
+          nextTick(verifyPass);
+        }
+        window.matchMedia?.('(prefers-color-scheme: dark)')?.addEventListener?.('change', applyTheme);
+        loginForm.email = settings.profileEmail || 'demo@passforge.app';
+      });
+
+      return {
+        icons, navItems, mobileNavItems, view, mobileMenuOpen, publicVerifyMode, pageTitle, events, attendees, settings, selectedEventId, selectedAttendeeId, profileInitials,
+        selectedEvent, selectedAttendees, selectedAttendee, metrics, filteredEvents, filteredAttendees, filteredPasses,
+        paginatedEvents, paginatedAttendees, paginatedPasses,
+        eventPage, attendeePage, passPage, eventTotalPages, attendeeTotalPages, passTotalPages,
+        eventPageStart, eventPageEnd, attendeePageStart, attendeePageEnd, passPageStart, passPageEnd,
+        eventSearch, attendeeSearch, passSearch, newAttendee, bulkCsv, verificationInput, verificationResult, verificationError, toast, loading, confirmDialog,
+        loginForm, loginError,
+        themeLabel, themeIcon, statusClass, formatDateTime, formatEventWindow, isEventExpired, eventStatusLabel, attendeesFor, selectEventAndView, newEvent,
+        confirmDeleteEvent, deleteEvent, addAttendee, addSampleAttendee, confirmDeleteAttendee, deleteAttendee, confirmRemoveBanner,
+        importCsv, uploadBanner, qrPayload, shareUrl, copyShareLink, emailPass,
+        regeneratePass, downloadPNG, downloadPDF, verifyPass, verifyAttendee, markVerifiedUsed, setAttendeeStatus, cycleTheme, login, logout, resetWorkspace,
+        closeConfirm, runConfirm
+      };
+    }
+  }).mount('#app');
+</script>
+</body>
+</html>
